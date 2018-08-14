@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Michael D. Sumner" />
+
+<meta name="date" content="2018-08-09" />
+
+<title>Vapour - lightweight GDAL</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Vapour - lightweight GDAL</h1>
+<h4 class="author"><em>Michael D. Sumner</em></h4>
+<h4 class="date"><em>2018-08-09</em></h4>
+
+
+
+<p>There’s a function <code>vapour_read_attributes</code> that returns the attributes as list of vectors.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">pfile &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;point.shp&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;vapour&quot;</span>)
+<span class="kw">library</span>(vapour)
+<span class="kw">vapour_read_attributes</span>(pfile)
+<span class="co">#&gt; $a</span>
+<span class="co">#&gt;  [1]  1  2  3  4  5  6  7  8  9 10</span></code></pre></div>
+<p>A higher level function <em>somewhere else</em> could wrap that function to return a data frame, but we don’t want that in <code>vapour</code> because it’s not aligned with the goals of being lightweight and reducing the level of interpretation applied. The <code>data.frame</code> function in R is actually a very primitive implememtation for data frames, so we avoid putting that interpretation on the data and leave that up to the developer / user.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mvfile &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;tab&quot;</span>, <span class="st">&quot;list_locality_postcode_meander_valley.tab&quot;</span>, <span class="dt">package=</span><span class="st">&quot;vapour&quot;</span>)
+
+dat &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">vapour_read_attributes</span>(mvfile),  <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+
+<span class="kw">dim</span>(dat)
+<span class="co">#&gt; [1] 58 11</span>
+
+<span class="kw">head</span>(dat)
+<span class="co">#&gt;   LOCAL_ID        NAME POSTCODE PLAN_REF   GAZ_DATE NOM_REG_NO</span>
+<span class="co">#&gt; 1   100422    Caveside     7304  CPR5322 1970-01-01       947L</span>
+<span class="co">#&gt; 2   100366     Weegena     7304  CPR5327 1970-01-01      1300M</span>
+<span class="co">#&gt; 3   100337   Kimberley     7304  CPR5361 1970-01-01      1063T</span>
+<span class="co">#&gt; 4   100308     Parkham     7304  CPR5327 1970-01-01      1179Y</span>
+<span class="co">#&gt; 5   100263   Frankford     7275  CPR5142 1970-01-01      1003Q</span>
+<span class="co">#&gt; 6   100311 Bridgenorth     7277  CPR5140 1970-01-01       925X</span>
+<span class="co">#&gt;                                      UFI          CREATED_ON</span>
+<span class="co">#&gt; 1 {4a5db4da-ca19-41a0-8dd4-c28a14bbee18} 2016-03-04 10:42:37</span>
+<span class="co">#&gt; 2 {253b676e-2791-469c-ac5e-9cb3a95cc158} 2015-06-19 13:46:50</span>
+<span class="co">#&gt; 3 {75f60a99-4c58-4d3e-911d-bbaa9a04164c} 2016-09-16 10:54:56</span>
+<span class="co">#&gt; 4 {b008d456-4e80-4237-80f6-a26c03817e3c} 2014-06-06 16:50:22</span>
+<span class="co">#&gt; 5 {953f4006-6397-4d03-af97-507eab170862} 2014-12-08 09:07:12</span>
+<span class="co">#&gt; 6 {5cf8e2a3-631c-4d52-a79c-0ce475f76848} 2015-05-11 10:49:09</span>
+<span class="co">#&gt;                                LIST_GUID SHAPE_AREA SHAPE_LEN</span>
+<span class="co">#&gt; 1 {839edd46-01a7-4a45-9d97-499962fa952b}      -9999  39785.88</span>
+<span class="co">#&gt; 2 {de35ebd4-0ac0-4299-947d-87d07c69426a}      -9999  31587.54</span>
+<span class="co">#&gt; 3 {73ced9ad-ee9a-41d5-a5bc-c95c4ab948d9}      -9999  35693.32</span>
+<span class="co">#&gt; 4 {37f17d1f-d2a0-4b78-ba0d-e5f62f216658}      -9999  67614.51</span>
+<span class="co">#&gt; 5 {47f3a313-913f-4f83-8dc1-021907f9ee80}      -9999  70140.78</span>
+<span class="co">#&gt; 6 {425d01cc-223b-4348-b965-384a98fd7999}      -9999  38156.70</span></code></pre></div>
+<p>A low-level function will return a character vector of JSON, GML, KML or WKT.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vapour_read_geometry</span>(pfile)[<span class="dv">5</span><span class="op">:</span><span class="dv">6</span>]  ## format = &quot;WKB&quot;
+<span class="co">#&gt; [[1]]</span>
+<span class="co">#&gt;  [1] 01 01 00 00 00 00 00 60 08 18 ad ec 3f 00 00 e0 9a ec 77 e2 3f</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; [[2]]</span>
+<span class="co">#&gt;  [1] 01 01 00 00 00 00 00 c0 40 3c bb d0 3f 00 00 80 0e 30 25 d5 3f</span>
+
+<span class="kw">vapour_read_geometry_text</span>(pfile)[<span class="dv">5</span><span class="op">:</span><span class="dv">6</span>]  ## format = &quot;json&quot;
+<span class="co">#&gt; [[1]]</span>
+<span class="co">#&gt; [1] &quot;{ \&quot;type\&quot;: \&quot;Point\&quot;, \&quot;coordinates\&quot;: [ 0.89612962375395, 0.577139189234003 ] }&quot;</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; [[2]]</span>
+<span class="co">#&gt; [1] &quot;{ \&quot;type\&quot;: \&quot;Point\&quot;, \&quot;coordinates\&quot;: [ 0.261427939636633, 0.330394758377224 ] }&quot;</span>
+
+<span class="kw">vapour_read_geometry_text</span>(pfile, <span class="dt">textformat =</span> <span class="st">&quot;gml&quot;</span>)[<span class="dv">2</span>]
+<span class="co">#&gt; [[1]]</span>
+<span class="co">#&gt; [1] &quot;&lt;gml:Point&gt;&lt;gml:coordinates&gt;0.145755324047059,0.395469118840992&lt;/gml:coordinates&gt;&lt;/gml:Point&gt;&quot;</span>
+
+## don't do this with a non-longlat data set like cfile
+<span class="kw">vapour_read_geometry_text</span>(pfile, <span class="dt">textformat =</span> <span class="st">&quot;kml&quot;</span>)[<span class="dv">1</span><span class="op">:</span><span class="dv">2</span>]
+<span class="co">#&gt; [[1]]</span>
+<span class="co">#&gt; [1] &quot;&lt;Point&gt;&lt;coordinates&gt;0.623376188334078,0.380098037654534&lt;/coordinates&gt;&lt;/Point&gt;&quot;</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; [[2]]</span>
+<span class="co">#&gt; [1] &quot;&lt;Point&gt;&lt;coordinates&gt;0.145755324047059,0.395469118840992&lt;/coordinates&gt;&lt;/Point&gt;&quot;</span>
+
+cfile &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;extdata/sst_c.gpkg&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;vapour&quot;</span>)
+<span class="kw">str</span>(<span class="kw">vapour_read_geometry_text</span>(cfile, <span class="dt">textformat =</span> <span class="st">&quot;wkt&quot;</span>)[<span class="dv">1</span><span class="op">:</span><span class="dv">2</span>])
+<span class="co">#&gt; List of 2</span>
+<span class="co">#&gt;  $ : chr &quot;MULTILINESTRING ((-16254.4210476553 -3269904.98849485,-48956.5880244328 -3282652.40200143,-82133.8545994558 -33&quot;| __truncated__</span>
+<span class="co">#&gt;  $ : chr &quot;MULTILINESTRING ((-18812.5003359828 -3784514.28779524,-40153.6937313319 -3789439.97415405,-37747.2881609 -38569&quot;| __truncated__</span></code></pre></div>
+<p>Combine these together to get a custom data set.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(dplyr)
+<span class="co">#&gt; </span>
+<span class="co">#&gt; Attaching package: 'dplyr'</span>
+<span class="co">#&gt; The following objects are masked from 'package:stats':</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt;     filter, lag</span>
+<span class="co">#&gt; The following objects are masked from 'package:base':</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt;     intersect, setdiff, setequal, union</span>
+dat &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">vapour_read_attributes</span>(cfile),  <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>) <span class="op">%&gt;%</span>
+<span class="st">    </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">wkt =</span> <span class="kw">vapour_read_geometry_text</span>(cfile, <span class="dt">textformat =</span> <span class="st">&quot;wkt&quot;</span>))
+<span class="kw">glimpse</span>(dat)
+<span class="co">#&gt; Observations: 7</span>
+<span class="co">#&gt; Variables: 3</span>
+<span class="co">#&gt; $ level &lt;chr&gt; &quot;275&quot;, &quot;280&quot;, &quot;285&quot;, &quot;290&quot;, &quot;295&quot;, &quot;300&quot;, &quot;305&quot;</span>
+<span class="co">#&gt; $ sst   &lt;dbl&gt; 1.85, 6.85, 11.85, 16.85, 21.85, 26.85, 31.85</span>
+<span class="co">#&gt; $ wkt   &lt;list&gt; [&quot;MULTILINESTRING ((-16254.4210476553 -3269904.98849485...</span></code></pre></div>
+<p>There is a function <code>vapour_read_extent</code> to return a straightforward bounding box vector for every feature, so that we can flexibly build an index of a data set for later use.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mvfile &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;tab&quot;</span>, <span class="st">&quot;list_locality_postcode_meander_valley.tab&quot;</span>, <span class="dt">package=</span><span class="st">&quot;vapour&quot;</span>)
+<span class="kw">str</span>(<span class="kw">head</span>(<span class="kw">vapour_read_extent</span>(mvfile)))
+<span class="co">#&gt; List of 6</span>
+<span class="co">#&gt;  $ : num [1:4] 448353 457706 5386606 5397352</span>
+<span class="co">#&gt;  $ : num [1:4] 453544 459318 5403972 5412505</span>
+<span class="co">#&gt;  $ : num [1:4] 454840 461042 5411562 5417892</span>
+<span class="co">#&gt;  $ : num [1:4] 461505 476213 5410911 5424854</span>
+<span class="co">#&gt;  $ : num [1:4] 471573 483157 5417110 5424645</span>
+<span class="co">#&gt;  $ : num [1:4] 491638 494048 5417262 5419331</span></code></pre></div>
+<p>This makes for a very lightweight summary data set that will scale to hundreds of large inputs.</p>
+<div id="raster-data" class="section level2">
+<h2>Raster data</h2>
+<p>Find raster info.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">f &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;sst.tif&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;vapour&quot;</span>)
+<span class="kw">vapour_raster_info</span>(f)
+<span class="co">#&gt; $geotransform</span>
+<span class="co">#&gt; [1] 140.00000000   0.07000000   0.00000000 -39.99722207   0.00000000</span>
+<span class="co">#&gt; [6]  -0.07000389</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $dimXY</span>
+<span class="co">#&gt; [1] 143 286</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $minmax</span>
+<span class="co">#&gt; [1] 271.350 289.859</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $tilesXY</span>
+<span class="co">#&gt; [1] 143  14</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $projection</span>
+<span class="co">#&gt; [1] &quot;GEOGCS[\&quot;WGS 84\&quot;,DATUM[\&quot;WGS_1984\&quot;,SPHEROID[\&quot;WGS 84\&quot;,6378137,298.257223563,AUTHORITY[\&quot;EPSG\&quot;,\&quot;7030\&quot;]],AUTHORITY[\&quot;EPSG\&quot;,\&quot;6326\&quot;]],PRIMEM[\&quot;Greenwich\&quot;,0],UNIT[\&quot;degree\&quot;,0.0174532925199433],AUTHORITY[\&quot;EPSG\&quot;,\&quot;4326\&quot;]]&quot;</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $bands</span>
+<span class="co">#&gt; [1] 1</span></code></pre></div>
+<p>SQL is available for general GDAL vector data.</p>
+</div>
+<div id="ogrsql" class="section level2">
+<h2>OGRSQL</h2>
+<p>Note that each lower-level function accepts a <code>sql</code> argument, which sends a query to the GDAL library to be executed against the data source, this can create custom layers and so is independent of and ignores the <code>layer</code> argument. Note that the same sql statement can be passed to the geometry readers, so we get the matching sets of information. <code>vapour_read_geometry</code> will return NULL for each missing geometry if the statement doesn’t include geometry explicitly or implicitly, but <code>vapour_read_geometry</code>, <code>vapour_read_geometry_text</code> and <code>vapour_read_extent</code> all explicitly modify the statement “SELECT *“. (We are also assuming the data source hasn’t changed between accesses … let me know if this causes you problems!).</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vapour_read_attributes</span>(mvfile, <span class="dt">sql =</span> <span class="st">&quot;SELECT NAME, PLAN_REF FROM list_locality_postcode_meander_valley WHERE POSTCODE = 7310&quot;</span>)
+<span class="co">#&gt; $NAME</span>
+<span class="co">#&gt; character(0)</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $PLAN_REF</span>
+<span class="co">#&gt; character(0)</span>
+
+
+<span class="kw">vapour_read_attributes</span>(mvfile, <span class="dt">sql =</span> <span class="st">&quot;SELECT NAME, PLAN_REF, FID FROM list_locality_postcode_meander_valley WHERE POSTCODE = 7306&quot;</span>)
+<span class="co">#&gt; $NAME</span>
+<span class="co">#&gt; [1] &quot;Cradle Mountain&quot; &quot;Mount Roland&quot;    &quot;Middlesex&quot;       &quot;Lower Beulah&quot;   </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $PLAN_REF</span>
+<span class="co">#&gt; [1] &quot;CPR5363&quot; &quot;CPR5359&quot; &quot;CPR5362&quot; &quot;CPR5361&quot;</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $FID</span>
+<span class="co">#&gt; [1] 20 31 36 45</span></code></pre></div>
+<p>Also note that FID is a special row number value, to be used a as general facility for selecting by structural row. This FID is driver-dependent, it can be 0- or 1-based, or completely arbitrary.</p>
+<p>Variously, drivers (GDAL’s formats) are 0- or 1- based with the FID. Others (such as OSM) are arbitrary, and have non-sequential (and presumably persientent) FID values.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(vapour)
+file0 &lt;-<span class="st"> &quot;list_locality_postcode_meander_valley.tab&quot;</span>
+mvfile &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;extdata/tab&quot;</span>, file0, <span class="dt">package=</span><span class="st">&quot;vapour&quot;</span>)
+layer &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;.tab$&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="kw">basename</span>(mvfile))
+## get the number of features by FID (DISTINCT should be redundant here)
+<span class="kw">vapour_read_attributes</span>(mvfile, <span class="dt">sql =</span> <span class="kw">sprintf</span>(<span class="st">&quot;SELECT COUNT(DISTINCT FID) AS nfeatures FROM %s&quot;</span>, layer))
+<span class="co">#&gt; $nfeatures</span>
+<span class="co">#&gt; [1] 58</span>
+
+## note how TAB is 1-based 
+<span class="kw">vapour_read_attributes</span>(mvfile, <span class="dt">sql =</span> <span class="kw">sprintf</span>(<span class="st">&quot;SELECT COUNT(*) AS n FROM %s WHERE FID &lt; 2&quot;</span>, layer))
+<span class="co">#&gt; $n</span>
+<span class="co">#&gt; [1] 1</span>
+
+## but SHP is 0-based
+shp &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;extdata/point.shp&quot;</span>, <span class="dt">package=</span><span class="st">&quot;vapour&quot;</span>)
+<span class="kw">vapour_read_attributes</span>(shp, <span class="dt">sql =</span> <span class="kw">sprintf</span>(<span class="st">&quot;SELECT COUNT(*) AS n FROM %s WHERE FID &lt; 2&quot;</span>, <span class="st">&quot;point&quot;</span>))
+<span class="co">#&gt; $n</span>
+<span class="co">#&gt; [1] 2</span></code></pre></div>
+<p>See <a href="http://www.gdal.org/ogr_sql.html" class="uri">http://www.gdal.org/ogr_sql.html</a></p>
+<p>There are many useful higher level operations that can be used with this. The simplest is the ability to use GDAL as a database-like connection to attribute tables.</p>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
