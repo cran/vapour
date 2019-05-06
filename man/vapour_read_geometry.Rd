@@ -4,16 +4,16 @@
 \alias{vapour_read_geometry}
 \alias{vapour_read_geometry_text}
 \alias{vapour_read_extent}
-\alias{vapour_read_geometry_text}
-\alias{vapour_read_extent}
 \title{Read GDAL feature geometry}
 \usage{
-vapour_read_geometry(dsource, layer = 0L, sql = "")
+vapour_read_geometry(dsource, layer = 0L, sql = "", limit_n = NULL,
+  skip_n = 0, extent = NA)
 
 vapour_read_geometry_text(dsource, layer = 0L, sql = "",
-  textformat = "json")
+  textformat = "json", limit_n = NULL, skip_n = 0, extent = NA)
 
-vapour_read_extent(dsource, layer = 0L, sql = "")
+vapour_read_extent(dsource, layer = 0L, sql = "", limit_n = NULL,
+  skip_n = 0, extent = NA)
 }
 \arguments{
 \item{dsource}{data source name (path to file, connection string, URL)}
@@ -21,6 +21,12 @@ vapour_read_extent(dsource, layer = 0L, sql = "")
 \item{layer}{integer of layer to work with, defaults to the first (0) or the name of the layer}
 
 \item{sql}{if not empty this is executed against the data source (layer will be ignored)}
+
+\item{limit_n}{an arbitrary limit to the number of features scanned}
+
+\item{skip_n}{an arbitrary number of features to skip}
+
+\item{extent}{apply an arbitrary extent, only when 'sql' used (must be 'ex = c(xmin, xmax, ymin, ymax)' but sp bbox, sf bbox, and raster extent also accepted)}
 
 \item{textformat}{indicate text output format, available are "json" (default), "gml", "kml", "wkt"}
 }
@@ -34,6 +40,12 @@ For each function an optional SQL string will be evaluated against the data sour
 
 \code{vapour_read_geometry_cpp} will read a feature for each of the ways listed above and is used by those functions. It's recommended
 to use the more specialist functions rather than this more general one.
+
+Note that \code{limit_n} and \code{skip_n} interact with the affect of \code{sql}, first the query is executed on the data source, then
+while looping through available features \code{skip_n} features are ignored, and then a feature-count begins and the loop
+is stopped if \code{limit_n} is reached.
+
+Note that \code{extent} applies to the 'SpatialFilter' of 'ExecuteSQL': https://www.gdal.org/ogr_sql.html#ogr_sql_exec_sql.
 }
 \examples{
 file <- "list_locality_postcode_meander_valley.tab"

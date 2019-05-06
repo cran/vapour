@@ -6,9 +6,9 @@
 #' The value of `window` may be input as only 4 elements, in which case the source dimension
 #' Will be used as the output dimension.
 #'
-#' This is analagous to the `rgdal` function `readGDAL` with its arguments `offset`,  `region.dim`
-#' and `output.dim`.  There's no semantic wrapper for this in vapour, but see `https://github.com/hypertidy/lazyraster` for
-#' one approach.
+#' This is analogous to the `rgdal` function `readGDAL` with its arguments `offset`,  `region.dim`
+#' and `output.dim`.  There's no semantic wrapper for this in vapour, but see
+#' `https://github.com/hypertidy/lazyraster` for one approach.
 #'
 #' Resampling options will depend on GDAL version,  but currently  'NearestNeighbour' (default),
 #' 'Average', 'Bilinear', 'Cubic', 'CubicSpline',  'Gauss', 'Lanczos', 'Mode' are potentially
@@ -17,12 +17,17 @@
 #'
 #' There is no write support in vapour.
 #'
+#' Currently the `window` argument is required. If this argument unspecified and `native = TRUE` then
+#' the default window specification will be used, the entire extent at native resolution. If 'window'
+#' is specified and `native = TRUE` then the window is used as-is, with a warning (native is ignored).
 #' @param x data source
 #' @param band index of which band to read
 #' @param window src_offset, src_dim, out_dim
 #' @param resample resampling method used (see details)
 #' @param ... reserved
+#' @param native apply the full native window for read, `FALSE` by default
 #' @param sds index of subdataset to read (usually 1)
+#'
 #' @export
 #' @examples
 #' f <- system.file("extdata", "sst.tif", package = "vapour")
@@ -35,14 +40,21 @@
 #' ## the method can be used to up-sample as well
 #' str(matrix(vapour_read_raster(f, window = c(0, 0, 10, 10, 15, 25)), 15))
 #'
-vapour_read_raster <- function(x, band = 1, window, resample = "nearestneighbour", ..., sds = NULL) {
+vapour_read_raster <- function(x, band = 1, window, resample = "nearestneighbour", ..., sds = NULL, native = FALSE) {
   datasourcename <- sds_boilerplate_checks(x, sds = sds)
   resample <- tolower(resample)  ## ensure check internally is lower case
   if (!resample %in% c("nearestneighbour", "average", "bilinear", "cubic", "cubicspline",
                        "gauss", "lanczos", "mode")) {
-    warning(sprintf("resample mode %s unknown?", resample))
+    warning(sprintf("resample mode '%s' is unknown", resample))
   }
   ri <- vapour_raster_info(x, sds = sds)
+  if (native && !missing(window)) warning("'window' is specified, so 'native = TRUE' is ignored")
+  if (native && missing(window)) window <- c(0, 0, ri$dimXY, ri$dimXY)
+
+  if (!is.numeric(band) || band < 1 || length(band) < 1 || length(band) > 1 || is.na(band)) {
+    stop("'band' must be an integer of length 1, and be greater than 0")
+  }
+  if (band > ri$bands) stop(sprintf("specified 'band = %i', but maximum band number is %i", band, ri$bands))
   ## turn these warning cases into errors here, + tests
   ## rationale is that dev can still call the internal R wrapper function to
   ## get these errors, but not the R user

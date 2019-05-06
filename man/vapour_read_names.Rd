@@ -4,7 +4,8 @@
 \alias{vapour_read_names}
 \title{Read feature names}
 \usage{
-vapour_read_names(dsource, layer = 0L, sql = "")
+vapour_read_names(dsource, layer = 0L, sql = "", limit_n = NULL,
+  skip_n = 0, extent = NA)
 }
 \arguments{
 \item{dsource}{data source name (path to file, connection string, URL)}
@@ -12,6 +13,12 @@ vapour_read_names(dsource, layer = 0L, sql = "")
 \item{layer}{integer of layer to work with, defaults to the first (0) or the name of the layer}
 
 \item{sql}{if not empty this is executed against the data source (layer will be ignored)}
+
+\item{limit_n}{an arbitrary limit to the number of features scanned}
+
+\item{skip_n}{an arbitrary number of features to skip}
+
+\item{extent}{apply an arbitrary extent, only when 'sql' used (must be 'ex = c(xmin, xmax, ymin, ymax)' but sp bbox, sf bbox, and raster extent also accepted)}
 }
 \description{
 Obtains the internal 'Feature ID (FID)' for a data source.
@@ -22,9 +29,8 @@ This may be virtual (created by GDAL for the SQL interface) and may be 0- or
 arbitrary. Please use with caution, this function can return the current
 FIDs, but there's no guarantee of what it represents for subsequent access.
 
-The \code{sql} input is only used for the \code{WHERE} clause, and forcibly modifies
-all input query to \code{SELECT FID} - use the \link{vapour_read_attributes} with SQL to
-be more specific.
+An earlier version use 'OGRSQL' to obtain these names, which was slow for some
+drivers and also clashed with independent use of the \code{sql} argument.
 }
 \examples{
 file <- "list_locality_postcode_meander_valley.tab"

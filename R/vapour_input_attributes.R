@@ -1,25 +1,4 @@
 
-## only select FID, no matter what user asks for
-fid_select <- function(x) {
-  if (nchar(x) < 1) return(x)
-
-  sqlout <- sprintf("SELECT FID FROM %s",
-                    substr(x, gregexpr("FROM ", x)[[1]][1] + 5, nchar(x)))
-  if (x != sqlout) warning("select statement assumed, modified to 'SELECT FID FROM' boilerplate")
-  sqlout
-
-}
-## only select *, no matter what user asks for
-## pretty sure this is not used, fid_select is preferred
-asterisk_select <- function(x) {
-  if (nchar(x) < 1) return(x)
-  sqlout <- sprintf("SELECT * FROM %s",
-                    substr(x, gregexpr("FROM ", x)[[1]][1] + 5, nchar(x)))
-  if (x != sqlout) warning("select statement assumed, modified to 'SELECT * FROM' boilerplate")
-  sqlout
-
-}
-
 ## find index of a layer name, or error
 index_layer <- function(x, layername) {
   if (is.factor(layername)) {
@@ -34,6 +13,33 @@ index_layer <- function(x, layername) {
  idx - 1L  ## layer is 0-based
 }
 
+validate_limit_n <- function(x) {
+  if (is.null(x)) {
+    x <- 0L
+  } else {
+    if (x < 1) stop("limit_n must be 1 or greater")
+  }
+  stopifnot(is.numeric(x))
+  x
+}
+
+validate_extent <- function(extent, sql, warn = TRUE) {
+  if (length(extent) > 1) {
+    if (is.matrix(extent) && all(colnames(extent) == c("min", "max")) && all(rownames(extent) == c("x", "y"))) {
+      extent <- as.vector(t(extent))
+    }
+    if (inherits(extent, "bbox")) extent <- extent[c("xmin", "xmax", "ymin", "ymax")]
+
+    if (!length(extent) == 4) stop("'extent' must be length 4 'c(xmin, xmax, ymin, ymax)'")
+  } else {
+    if (inherits(extent, "Extent")) extent <- c(xmin = extent@xmin, xmax = extent@xmax,
+                                                ymin = extent@ymin, ymax = extent@ymax)
+  }
+  if (is.na(extent[1])) extent = 0.0
+  if (warn && length(extent) == 4L && nchar(sql) < 1) warning("'extent' given but 'sql' query is empty, extent clipping will be ignored")
+  if (!is.numeric(extent)) stop("extent must be interpretable as xmin, xmax, ymin, ymax")
+  extent
+}
 #' Read GDAL layer names
 #'
 #' Obtain the names of available layers from a GDAL vector source.
@@ -69,9 +75,8 @@ vapour_layer_names <- function(dsource, sql = "") {
 #' arbitrary. Please use with caution, this function can return the current
 #' FIDs, but there's no guarantee of what it represents for subsequent access.
 #'
-#' The `sql` input is only used for the `WHERE` clause, and forcibly modifies
-#' all input query to `SELECT FID` - use the [vapour_read_attributes] with SQL to
-#' be more specific.
+#' An earlier version use 'OGRSQL' to obtain these names, which was slow for some
+#' drivers and also clashed with independent use of the `sql` argument.
 #' @inheritParams vapour_read_geometry
 #' @export
 #' @examples
@@ -79,20 +84,48 @@ vapour_layer_names <- function(dsource, sql = "") {
 #' mvfile <- system.file(file.path("extdata/tab", file), package="vapour")
 #' range(fids <- vapour_read_names(mvfile))
 #' length(fids)
-vapour_read_names <- function(dsource, layer = 0L, sql = "") {
+vapour_read_names <- function(dsource, layer = 0L, sql = "", limit_n = NULL, skip_n = 0, extent = NA) {
   if (!is.numeric(layer)) layer <- index_layer(dsource, layer)
-  layers <- vapour_layer_names(dsource)
-  if (nchar(sql) > 1) {
-    sql <- fid_select(sql)
-  } else {
-    sql <- sprintf("SELECT FID FROM %s", layers[layer + 1])
-  }
-  vapour_read_attributes(dsource, layer = layer, sql = sql)[["FID"]]
+  limit_n <- validate_limit_n(limit_n)
+
+  extent <- validate_extent(extent, sql)
+  fids <- vapour_read_names_cpp(dsource, layer = layer, sql = sql, limit_n = limit_n, skip_n = skip_n, ex = extent)
+  unlist(lapply(fids, function(x) if (is.null(x)) NA_real_ else x))
 }
+
+#' Read feature field attributes types.
+#'
+#' Obtains the internal type-constant name for the data attributes in a source.
+#' Use this to compare the interpreted versions converted into R types by
+#' `vapour_read_attributes`.
+#'
+#' These are defined for the enum OGRFieldType in GDAL itself.
+#' \url{https://gdal.org/ogr__core_8h.html#a787194bea637faf12d61643124a7c9fc}
+#'
+#' @inheritParams vapour_read_geometry
+#' @export
+#' @examples
+#' file <- "list_locality_postcode_meander_valley.tab"
+#' mvfile <- system.file(file.path("extdata/tab", file), package="vapour")
+#' vapour_report_attributes(mvfile)
+#'
+#' ## modified by sql argument
+#' vapour_report_attributes(mvfile,
+#'   sql = "SELECT POSTCODE, NAME FROM list_locality_postcode_meander_valley")
+vapour_report_attributes <- function(dsource, layer = 0L, sql = "") {
+  if (!is.numeric(layer)) layer <- index_layer(dsource, layer)
+  vapour_report_attributes_cpp(dsource, layer, sql = sql)
+}
+
 
 #' Read feature attribute data
 #'
 #' Read features attributes, optionally after SQL execution.
+#'
+#' Internal types are not fully supported, there are straightforward conversions
+#' for numeric, integer (32-bit) and string types. Date, Time, DateTime are
+#' returned as character, and Integer64 is returned as numeric.
+#'
 #' @inheritParams vapour_read_geometry
 #' @examples
 #' file <- "list_locality_postcode_meander_valley.tab"
@@ -106,8 +139,10 @@ vapour_read_names <- function(dsource, layer = 0L, sql = "") {
 #' SQL <- "SELECT NAME FROM list_locality_postcode_meander_valley WHERE POSTCODE < 7300"
 #' vapour_read_attributes(dsource, sql = SQL)
 #' @export
-vapour_read_attributes <- function(dsource, layer = 0L, sql = "") {
+vapour_read_attributes <- function(dsource, layer = 0L, sql = "", limit_n = NULL, skip_n = 0, extent = NA) {
   if (!is.numeric(layer)) layer <- index_layer(dsource, layer)
-  vapour_read_attributes_cpp(dsource = dsource, layer = layer, sql = sql)
+  limit_n <- validate_limit_n(limit_n)
+  extent <- validate_extent(extent, sql)
+  vapour_read_attributes_cpp(dsource = dsource, layer = layer, sql = sql, limit_n = limit_n, skip_n = skip_n, ex = extent)
 }
 

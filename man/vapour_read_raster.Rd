@@ -4,8 +4,8 @@
 \alias{vapour_read_raster}
 \title{Raster IO (read)}
 \usage{
-vapour_read_raster(x, band = 1, window, resample = "nearestneighbour", ...,
-  sds = NULL)
+vapour_read_raster(x, band = 1, window, resample = "nearestneighbour",
+  ..., sds = NULL, native = FALSE)
 }
 \arguments{
 \item{x}{data source}
@@ -19,6 +19,8 @@ vapour_read_raster(x, band = 1, window, resample = "nearestneighbour", ...,
 \item{...}{reserved}
 
 \item{sds}{index of subdataset to read (usually 1)}
+
+\item{native}{apply the full native window for read, \code{FALSE} by default}
 }
 \description{
 Read a window of data from a GDAL raster source. The first argument is the source
@@ -28,9 +30,9 @@ name and the second is a 6-element \code{window} of offset, source dimension, an
 The value of \code{window} may be input as only 4 elements, in which case the source dimension
 Will be used as the output dimension.
 
-This is analagous to the \code{rgdal} function \code{readGDAL} with its arguments \code{offset},  \code{region.dim}
-and \code{output.dim}.  There's no semantic wrapper for this in vapour, but see \code{https://github.com/hypertidy/lazyraster} for
-one approach.
+This is analogous to the \code{rgdal} function \code{readGDAL} with its arguments \code{offset},  \code{region.dim}
+and \code{output.dim}.  There's no semantic wrapper for this in vapour, but see
+\code{https://github.com/hypertidy/lazyraster} for one approach.
 
 Resampling options will depend on GDAL version,  but currently  'NearestNeighbour' (default),
 'Average', 'Bilinear', 'Cubic', 'CubicSpline',  'Gauss', 'Lanczos', 'Mode' are potentially
@@ -38,6 +40,10 @@ available. These are compared internally by converting to lower-case. Detailed u
 a standard facility used in GDAL. Easiest way to compare results is with gdal_translate.
 
 There is no write support in vapour.
+
+Currently the \code{window} argument is required. If this argument unspecified and \code{native = TRUE} then
+the default window specification will be used, the entire extent at native resolution. If 'window'
+is specified and \code{native = TRUE} then the window is used as-is, with a warning (native is ignored).
 }
 \examples{
 f <- system.file("extdata", "sst.tif", package = "vapour")

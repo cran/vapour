@@ -5,59 +5,50 @@ using namespace Rcpp;
 #include "gdalwarper.h"
 #include "cpl_conv.h" // for CPLMalloc()
 
+#include "gdal.h"  // for GCPs
+
 // [[Rcpp::export]]
-List raster_info_cpp (const char* pszFilename)
+List raster_info_cpp (CharacterVector filename, LogicalVector min_max)
 {
-  GDALDataset  *poDataset;
+  GDALDatasetH hDataset;
   GDALAllRegister();
-  poDataset = (GDALDataset *) GDALOpen( pszFilename, GA_ReadOnly );
-  if( poDataset == NULL )
+  hDataset = GDALOpenEx(filename[0], GA_ReadOnly, nullptr, NULL, nullptr);
+
+  if( hDataset == nullptr )
   {
     Rcpp::stop("cannot open dataset");
   }
+  int nXSize = GDALGetRasterXSize(hDataset);
+  int nYSize = GDALGetRasterYSize(hDataset);
 
-
-  //poDataset->GetMetadata();
 
   double        adfGeoTransform[6];
 
-  poDataset->GetGeoTransform( adfGeoTransform );
+  //poDataset->GetGeoTransform( adfGeoTransform );
+  GDALGetGeoTransform(hDataset, adfGeoTransform );
 
   // bail out NOW (we have no SDS and/or no rasters)
   // #f <- system.file("h5ex_t_enum.h5", package = "h5")
-
-  // #raster_sds_info(f)
-  // #raster_info(f)
-  if (poDataset->GetRasterCount() < 1) {
+  if (GDALGetRasterCount(hDataset) < 1) {
     Rcpp::stop("no rasters found in dataset");
   }
-  // Rprintf( "Size is %dx%dx%d\n",
-  //         poDataset->GetRasterXSize(), poDataset->GetRasterYSize(),
-  //         poDataset->GetRasterCount() );
-
-
   Rcpp::DoubleVector trans(6);
   for (int ii = 0; ii < 6; ii++) trans[ii] = adfGeoTransform[ii];
 
 
 
-  GDALRasterBand  *poBand;
+  GDALRasterBandH  hBand;
   int             nBlockXSize, nBlockYSize;
   int             bGotMin, bGotMax;
   double          adfMinMax[2];
 
-  poBand = poDataset->GetRasterBand( 1 );
-
+  hBand = GDALGetRasterBand(hDataset, 1);
   // if we don't bail out above with no rasters things go bad here
-  poBand->GetBlockSize( &nBlockXSize, &nBlockYSize );
+  GDALGetBlockSize(hBand, &nBlockXSize, &nBlockYSize);
+  if (min_max[0]) {
+    GDALComputeRasterMinMax(hBand, TRUE, adfMinMax);
+  }
 
-  adfMinMax[0] = poBand->GetMinimum( &bGotMin );
-  adfMinMax[1] = poBand->GetMaximum( &bGotMax );
-  if( ! (bGotMin && bGotMax) )
-    GDALComputeRasterMinMax((GDALRasterBandH)poBand, TRUE, adfMinMax);
-
-  int nXSize = poBand->GetXSize();
-  int nYSize = poBand->GetYSize();
   int nn = 6;
   Rcpp::List out(nn);
   Rcpp::CharacterVector names(nn);
@@ -66,31 +57,94 @@ List raster_info_cpp (const char* pszFilename)
   out[1] = Rcpp::IntegerVector::create(nXSize, nYSize);
   names[1] = "dimXY";
 
-  out[2] = Rcpp::DoubleVector::create(adfMinMax[0], adfMinMax[1]);
+  DoubleVector vmmx(2);
+  if (min_max[0]) {
+    vmmx[0] = adfMinMax[0];
+    vmmx[1] = adfMinMax[1];
+  } else {
+    vmmx[0] = NA_REAL;
+    vmmx[1] = NA_REAL;
+  }
+  out[2] = vmmx;
   names[2] = "minmax";
 
   out[3] = Rcpp::IntegerVector::create(nBlockXSize, nBlockYSize);
   names[3] = "tilesXY";
 
   const char *proj;
-  proj = poDataset->GetProjectionRef();
+  proj = GDALGetProjectionRef(hDataset);
 
   out[4] = Rcpp::CharacterVector::create(proj);
   names[4] = "projection";
-  out.attr("names") = names;
 
   // get band number
-  int nBands = poDataset->GetRasterCount();
+  int nBands = GDALGetRasterCount(hDataset);
   out[5] = nBands;
   names[5] = "bands";
-  // close up
-  GDALClose( (GDALDatasetH) poDataset );
 
+  out.attr("names") = names;
+
+
+  // close up
+  GDALClose( hDataset );
   return out;
 
 }
 
+// [[Rcpp::export]]
+List raster_gcp_cpp(CharacterVector filename) {
+  // get GCPs if any
+  GDALDatasetH hDataset;
+  //GDALDataset  *poDataset;
+  GDALAllRegister();
+ hDataset = GDALOpenEx( filename[0], GA_ReadOnly, nullptr, NULL, nullptr);
+  if( hDataset == nullptr )
+  {
+    Rcpp::stop("cannot open dataset");
+  }
 
+ int gcp_count;
+  gcp_count = GDALGetGCPCount(hDataset);
+  const char *srcWKT = GDALGetGCPProjection(hDataset);
+  Rcpp::List gcpout(6);
+  Rcpp::CharacterVector gcpnames(6);
+  Rcpp::CharacterVector gcpCRS(1);
+  gcpCRS[0] = srcWKT;
+  gcpnames[0] = "Pixel";
+  gcpnames[1] = "Line";
+  gcpnames[2] = "X";
+  gcpnames[3] = "Y";
+  gcpnames[4] = "Z";
+  gcpnames[5] = "CRS";
+  gcpout.attr("names") = gcpnames;
+  if (gcp_count > 0) {
+    Rcpp::NumericVector GCPPixel(gcp_count);
+    Rcpp::NumericVector GCPLine(gcp_count);
+    Rcpp::NumericVector GCPX(gcp_count);
+    Rcpp::NumericVector GCPY(gcp_count);
+    Rcpp::NumericVector GCPZ(gcp_count);
+    for (int igcp = 0; igcp < gcp_count; ++igcp) {
+      const GDAL_GCP *gcp = GDALGetGCPs( hDataset ) + igcp;
+      //const GDAL_GCP *gcp = poDataset->GetGCPs() + igcp;
+      GCPPixel[igcp] = gcp->dfGCPPixel;
+      GCPLine[igcp] = gcp->dfGCPLine;
+      GCPX[igcp] = gcp->dfGCPX;
+      GCPY[igcp] = gcp->dfGCPY;
+      GCPZ[igcp] = gcp->dfGCPZ;
+    }
+    gcpout[0] = GCPPixel;
+    gcpout[1] = GCPLine;
+    gcpout[2] = GCPX;
+    gcpout[3] = GCPY;
+    gcpout[4] = GCPZ;
+    gcpout[5] = gcpCRS;
+    //gcp_proj = poDataset->GetGCPProjection();
+  } else {
+    Rprintf("No GCP (ground control points) found.\n");
+  }
+  GDALClose( hDataset );
+  return gcpout;
+}
 // [[Rcpp::export]]
 List raster_io_cpp(CharacterVector filename,
                             IntegerVector window,

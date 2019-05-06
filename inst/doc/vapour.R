@@ -43,13 +43,45 @@ mvfile <- system.file("extdata", "tab", "list_locality_postcode_meander_valley.t
 str(head(vapour_read_extent(mvfile)))
 
 
+## ------------------------------------------------------------------------
+
+vapour_geom_summary(mvfile)
+
+## ----skip-limit----------------------------------------------------------
+vapour_geom_summary(mvfile, limit_n = 4)$FID
+
+vapour_geom_summary(mvfile, skip_n = 2, limit_n = 6)$FID
+
+vapour_geom_summary(mvfile, skip_n = 6)$FID
+
+
 ## ----raster--------------------------------------------------------------
 f <- system.file("extdata", "sst.tif", package = "vapour")
 vapour_raster_info(f)
 
 
+## ----raster-read---------------------------------------------------------
+vapour_read_raster(f, window = c(0, 0, 6, 5))
+
+## the final two arguments specify up- or down-sampling
+## controlled by resample argument
+vapour_read_raster(f, window = c(0, 0, 6, 5, 8, 9))
+
+## if window is not included, and native TRUE then we get the entire window
+str(vapour_read_raster(f, native = TRUE))
+
+## notice this is the length of the dimXY above
+prod(vapour_raster_info(f)$dimXY)
+
+
+## ----gdal-flex-----------------------------------------------------------
+mm <- matrix(vapour_read_raster(f, native = TRUE), 
+      vapour_raster_info(f)$dimXY)
+mm[mm < -1e6] <- NA
+image(mm[,ncol(mm):1], asp = 2)
+
 ## ------------------------------------------------------------------------
-vapour_read_attributes(mvfile, sql = "SELECT NAME, PLAN_REF FROM list_locality_postcode_meander_valley WHERE POSTCODE = 7310")
+vapour_read_attributes(mvfile, sql = "SELECT NAME, PLAN_REF FROM list_locality_postcode_meander_valley WHERE POSTCODE < 7291")
 
 
 vapour_read_attributes(mvfile, sql = "SELECT NAME, PLAN_REF, FID FROM list_locality_postcode_meander_valley WHERE POSTCODE = 7306")
@@ -69,4 +101,13 @@ vapour_read_attributes(mvfile, sql = sprintf("SELECT COUNT(*) AS n FROM %s WHERE
 ## but SHP is 0-based
 shp <- system.file("extdata/point.shp", package="vapour")
 vapour_read_attributes(shp, sql = sprintf("SELECT COUNT(*) AS n FROM %s WHERE FID < 2", "point"))
+
+## ----GDAL-info-----------------------------------------------------------
+vapour_gdal_version()
+
+str(vapour_all_drivers())
+
+
+## ----GDAL-driver---------------------------------------------------------
+vapour_driver(mvfile)
 

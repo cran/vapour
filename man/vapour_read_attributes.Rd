@@ -4,7 +4,8 @@
 \alias{vapour_read_attributes}
 \title{Read feature attribute data}
 \usage{
-vapour_read_attributes(dsource, layer = 0L, sql = "")
+vapour_read_attributes(dsource, layer = 0L, sql = "", limit_n = NULL,
+  skip_n = 0, extent = NA)
 }
 \arguments{
 \item{dsource}{data source name (path to file, connection string, URL)}
@@ -12,9 +13,20 @@ vapour_read_attributes(dsource, layer = 0L, sql = "")
 \item{layer}{integer of layer to work with, defaults to the first (0) or the name of the layer}
 
 \item{sql}{if not empty this is executed against the data source (layer will be ignored)}
+
+\item{limit_n}{an arbitrary limit to the number of features scanned}
+
+\item{skip_n}{an arbitrary number of features to skip}
+
+\item{extent}{apply an arbitrary extent, only when 'sql' used (must be 'ex = c(xmin, xmax, ymin, ymax)' but sp bbox, sf bbox, and raster extent also accepted)}
 }
 \description{
 Read features attributes, optionally after SQL execution.
+}
+\details{
+Internal types are not fully supported, there are straightforward conversions
+for numeric, integer (32-bit) and string types. Date, Time, DateTime are
+returned as character, and Integer64 is returned as numeric.
 }
 \examples{
 file <- "list_locality_postcode_meander_valley.tab"

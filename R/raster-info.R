@@ -4,12 +4,15 @@ sds_boilerplate_checks <- function(x, sds = NULL) {
   if (file.exists(x)) x <- base::normalizePath(x, mustWork = FALSE)
   ## use sds wrapper to target the first by default
   datavars <- as.data.frame(vapour_sds_names(x), stringsAsFactors = FALSE)
+
+  ## catch for l1b where we end up with the GCP conflated with the data set #48
+  if (nrow(datavars) < 2) return(x)  ## shortcut to avoid #48
   wasnull <- is.null(sds)
   if (wasnull) sds <- 1
   if (wasnull && nrow(datavars) > 1L) {
     varnames <- unlist(lapply(strsplit(datavars$subdataset, ":"), utils::tail, 1L))
-    message("subdataset (variable) used is %s (1)", varnames[1])
-    message("If that is not correct, set it to one of ", paste(sprintf("%i (%s)", seq_len(nrow(datavars))[-1], varnames[-1]), collapse = ", "))
+    message(sprintf("subdataset (variable) used is '%s'\n", varnames[1]))
+    message("If that is not correct (or to suppress this message) choose 'sds' by number from ", paste(sprintf("\n%i or '%s'", seq_len(nrow(datavars)), varnames), collapse = ", "))
   }
   stopifnot(length(sds) == 1L)
 
@@ -29,9 +32,10 @@ sds_boilerplate_checks <- function(x, sds = NULL) {
 #' \describe{
 #' \item{geotransform}{the affine transform}
 #' \item{dimXY}{dimensions x-y, columns*rows}
-#' \item{minmax}{range of data values}
+#' \item{minmax}{numeric values of the computed min and max from the first band (optional)}
 #' \item{tilesXY}{dimensions x-y of internal tiling scheme}
 #' \item{projection}{text version of map projection parameter string}
+#' \item{bands}{number of bands in the dataset}
 #' }
 #'
 #' On access vapour functions will report on the existence of subdatasets while
@@ -93,19 +97,57 @@ sds_boilerplate_checks <- function(x, sds = NULL) {
 #' affine raster will be use with this _rotation_ specified within the transform
 #' coefficients.
 #'
+#' Calculation of 'minmax' can take a significant amount of time, so it's not done by default. Use
+#' 'minmax = TRUE' to do it. (It does perform well, but may be prohibitive for very large or remote sources.)
 #' @seealso vapour_sds_info
+#'
 #' @param x data source string (i.e. file name or URL or database connection string)
 #' @param sds a subdataset number, if necessary
+#' @param min_max logical, control computing min and max values in source ('FALSE' by default)
 #' @param ... currently unused
+#'
 #' @export
 #' @examples
 #' f <- system.file("extdata", "sst.tif", package = "vapour")
 #' vapour_raster_info(f)
-vapour_raster_info <- function(x, ..., sds = NULL) {
+vapour_raster_info <- function(x, ..., sds = NULL, min_max = FALSE) {
   datasourcename <- sds_boilerplate_checks(x, sds = sds)
-  raster_info_cpp(pszFilename = datasourcename)
+  sdsnames <- vapour_sds_names(x)
+
+  raster_info_cpp(filename = datasourcename, min_max = min_max)
 }
 
+#' Raster ground control points
+#'
+#' Return any ground control points for a raster data set, if they exist.
+#'
+#' Pixel and Line coordinates do not correspond to cells in the underlying raster grid, they
+#' refer to the index space of that array in 0, ncols and 0, nrows. They are usually a subsample of
+#' the grid and may not align with the grid spacing itself (though they often do in satellite remote sensing products).
+#'
+#' The coordinate system of the GCPs is currently not read.
+#'
+#' @param x data source string (i.e. file name or URL or database connection string)
+#' @param ... ignored currently
+#'
+#' @return list with
+#' \itemize{
+#'  \item \code{Pixel} the pixel coordinate
+#'  \item \code{Line} the line coordinate
+#'  \item \code{X} the X coordinate of the GCP
+#'  \item \code{Y} the Y coordinate of the GCP
+#'  \item \code{Z} the Z coordinate of the GCP (usually zero)
+#' }
+#' @export
+#' @examples
+#' ## this file has no ground control points
+#' ## they are rare, and tend to be in large files
+#' f <- system.file("extdata", "sst.tif", package = "vapour")
+#' vapour_raster_gcp(f)
+vapour_raster_gcp <- function(x, ...) {
+  if (file.exists(x)) x <- normalizePath(x)
+  raster_gcp_cpp(x)
+}
 #' GDAL raster subdatasets (variables)
 #'
 #' A **subdataset** is a collection abstraction for a number of **variables**
@@ -128,6 +170,7 @@ vapour_raster_info <- function(x, ..., sds = NULL) {
 #' f <- system.file("extdata", "sst.tif", package = "vapour")
 #' vapour_sds_names(f)
 vapour_sds_names <- function(x) {
+  if (file.exists(x)) x <- normalizePath(x)
   stopifnot(length(x) == 1L)
   sources <- sds_info_cpp(x)
   if (length(sources) > 1) {
