@@ -4,6 +4,7 @@ using namespace Rcpp;
 #include "gdal_priv.h"
 #include "gdalwarper.h"
 #include "cpl_conv.h" // for CPLMalloc()
+#include "ogr_spatialref.h" // for OGRSpatialReference
 
 #include "gdal.h"  // for GCPs
 
@@ -39,7 +40,7 @@ List raster_info_cpp (CharacterVector filename, LogicalVector min_max)
 
   GDALRasterBandH  hBand;
   int             nBlockXSize, nBlockYSize;
-  int             bGotMin, bGotMax;
+  //int             bGotMin, bGotMax;
   double          adfMinMax[2];
 
   hBand = GDALGetRasterBand(hDataset, 1);
@@ -49,7 +50,7 @@ List raster_info_cpp (CharacterVector filename, LogicalVector min_max)
     GDALComputeRasterMinMax(hBand, TRUE, adfMinMax);
   }
 
-  int nn = 6;
+  int nn = 7;
   Rcpp::List out(nn);
   Rcpp::CharacterVector names(nn);
   out[0] = trans;
@@ -73,7 +74,8 @@ List raster_info_cpp (CharacterVector filename, LogicalVector min_max)
 
   const char *proj;
   proj = GDALGetProjectionRef(hDataset);
-
+  //https://gis.stackexchange.com/questions/164279/how-do-i-create-ogrspatialreference-from-raster-files-georeference-c
+  //char *proj_tmp = (char *) proj;
   out[4] = Rcpp::CharacterVector::create(proj);
   names[4] = "projection";
 
@@ -82,9 +84,16 @@ List raster_info_cpp (CharacterVector filename, LogicalVector min_max)
   out[5] = nBands;
   names[5] = "bands";
 
+  //char *stri;
+  //OGRSpatialReference oSRS;
+  //oSRS.importFromWkt(&proj_tmp);
+  //oSRS.exportToProj4(&stri);
+  out[6] =  Rcpp::CharacterVector::create(""); //Rcpp::CharacterVector::create(stri);
+  names[6] = "proj4";
+
   out.attr("names") = names;
 
-
+  //CPLFree(stri);
   // close up
   GDALClose( hDataset );
   return out;

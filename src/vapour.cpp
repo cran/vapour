@@ -209,8 +209,37 @@ Rcpp::List allocate_attribute(OGRFeatureDefn *poFDefn, int n_features, bool int6
   out.attr("names") = names;
   return out;
 }
+// [[Rcpp::export]]
+DoubleVector find_feature_count_cpp(Rcpp::CharacterVector dsource,
+                                    Rcpp::IntegerVector layer = 0,
+                                    Rcpp::LogicalVector iterate = true) {
+  GDALAllRegister();
+  GDALDataset       *poDS;
+  poDS = (GDALDataset*) GDALOpenEx(dsource[0], GDAL_OF_VECTOR, NULL, NULL, NULL );
+  if( poDS == NULL )
+  {
+    Rcpp::stop("Open failed.\n");
+  }
 
 
+  OGRLayer  *aLayer;
+  aLayer =  poDS->GetLayer(layer[0]);
+  OGRFeature *aFeature;
+  aLayer->ResetReading();
+  double nFeature = (double)aLayer->GetFeatureCount();
+  if (iterate) {
+    nFeature = 0;
+    while( (aFeature = aLayer->GetNextFeature()) != NULL )
+    {
+      nFeature++;
+      OGRFeature::DestroyFeature(aFeature);
+    }
+
+  }
+  GDALClose( poDS );
+
+  return(nFeature);
+}
 
 // [[Rcpp::export]]
 List vapour_read_attributes_cpp(Rcpp::CharacterVector dsource,
@@ -269,7 +298,7 @@ List vapour_read_attributes_cpp(Rcpp::CharacterVector dsource,
   OGRFeature *poFeature;
   poLayer->ResetReading();
   double nFeature = (double)poLayer->GetFeatureCount();
-
+nFeature = -1;
   if (nFeature == -1) {
 
   Rprintf("manually finding feature count");
@@ -290,10 +319,14 @@ List vapour_read_attributes_cpp(Rcpp::CharacterVector dsource,
     Rcpp::stop("Number of features exceeds maximal number able to be read");
 
 
-
+// this is poorly laid out but works, check twice to avoid
+// over allocating as per #60
   if (limit_n[0] > 0) {
     if (limit_n[0] < nFeature) {
-      nFeature = limit_n[0];
+      nFeature = nFeature - skip_n[0];
+      if (limit_n[0] < nFeature) {
+        nFeature = limit_n[0];
+      }
     }
   }
 
@@ -642,7 +675,7 @@ List vapour_projection_info_cpp(Rcpp::CharacterVector dsource,
   } else {
     Rcpp::warning("not null");
     // SRS is not NULL, so explore validation
-    OGRErr err = SRS->Validate();
+  //  OGRErr err = SRS->Validate();
     SRS->exportToProj4(&proj);
     outproj[0] = proj;
     info_out[0] = Rcpp::clone(outproj);
@@ -754,12 +787,12 @@ List vapour_read_names_cpp(Rcpp::CharacterVector dsource,
     poLayer->ResetReading();
 
   }
-
   if (limit_n[0] > 0) {
     if (limit_n[0] < nFeature) {
       nFeature = limit_n[0];
     }
   }
+
   if (nFeature < 1) {
     if (skip_n[0] > 0) {
       Rcpp::stop("no features to be read (is 'skip_n' set too high?");
@@ -781,7 +814,7 @@ List vapour_read_names_cpp(Rcpp::CharacterVector dsource,
       lFeature++;
     }
     iFeature++;
-    if (limit_n[0] > 0 && iFeature >= limit_n[0]) {
+    if (limit_n[0] > 0 && lFeature >= limit_n[0]) {
       break;  // short-circuit for limit_n
     }
   }
@@ -839,7 +872,7 @@ CharacterVector vapour_report_attributes_cpp(Rcpp::CharacterVector dsource,
   poLayer->ResetReading();
 
   OGRFeatureDefn *poFDefn = poLayer->GetLayerDefn();
-  int iFeature = 0;
+  //int iFeature = 0;
   poFeature = poLayer->GetNextFeature();
 
   int fieldcount = poFDefn->GetFieldCount();

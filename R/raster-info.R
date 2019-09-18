@@ -1,4 +1,5 @@
 sds_boilerplate_checks <- function(x, sds = NULL) {
+
   ## don't pass relative paths to GDAL
   ## but also don't prevent access to non-files
   if (file.exists(x)) x <- base::normalizePath(x, mustWork = FALSE)
@@ -9,10 +10,12 @@ sds_boilerplate_checks <- function(x, sds = NULL) {
   if (nrow(datavars) < 2) return(x)  ## shortcut to avoid #48
   wasnull <- is.null(sds)
   if (wasnull) sds <- 1
+  if (!is.numeric(sds)) stop("sds must be specified by number, starting from 1")
   if (wasnull && nrow(datavars) > 1L) {
     varnames <- unlist(lapply(strsplit(datavars$subdataset, ":"), utils::tail, 1L))
     message(sprintf("subdataset (variable) used is '%s'\n", varnames[1]))
-    message("If that is not correct (or to suppress this message) choose 'sds' by number from ", paste(sprintf("\n%i or '%s'", seq_len(nrow(datavars)), varnames), collapse = ", "))
+    message("If that is not correct (or to suppress this message) choose 'sds' by number from ",
+      paste(sprintf("\n%i: '%s'", seq_len(nrow(datavars)), varnames), collapse = ", "))
   }
   stopifnot(length(sds) == 1L)
 
@@ -36,6 +39,7 @@ sds_boilerplate_checks <- function(x, sds = NULL) {
 #' \item{tilesXY}{dimensions x-y of internal tiling scheme}
 #' \item{projection}{text version of map projection parameter string}
 #' \item{bands}{number of bands in the dataset}
+#' \item{proj4}{not implemented}
 #' }
 #'
 #' On access vapour functions will report on the existence of subdatasets while
@@ -64,7 +68,7 @@ sds_boilerplate_checks <- function(x, sds = NULL) {
 #'
 #' @section The Geo Transform:
 #'
-#' From \url{http://www.gdal.org/gdal_datamodel.html}.
+#' From \url{https://gdal.org/user/raster_data_model.html}.
 #'
 #' The affine transform consists of six coefficients returned by
 #' `GDALDataset::GetGeoTransform()` which map pixel/line coordinates into

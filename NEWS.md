@@ -1,3 +1,19 @@
+# vapour 0.3.0
+
+* Updates to configure to remove deprecated R CMD config CPP (thanks to CRAN). 
+
+* Updates to enable use of the deprecated PROJ API. 
+
+* New function `vapour_vsi_list()` to list contents of virtual files.  See https://twitter.com/mdsumner/status/1158335706483179521 and https://github.com/hypertidy/vapour/issues/55 for inspirations. 
+
+* Added a hex sticker!  Thanks to @Maschette. 
+
+* Added 'proj4' string as well as 'projection' (WKT) to the output of `vapour_raster_info()`  
+ (these aren't always available, especially not for longlat NetCDF). 
+
+* Fixed failure in `limit_n`, `skip_n` behaviour for reading names (FIDs) and attributes, 
+ (#60).
+ 
 # vapour 0.2.0
 
 * Fixed incorrect use of C-level `printf()` and unnecessary tests thanks to CRAN 

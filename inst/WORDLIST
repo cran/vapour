@@ -12,6 +12,7 @@ dplyr
 dplyrexpt
 enum
 EWKB
+executesql
 ExecuteSQL
 favour
 FID
@@ -60,6 +61,7 @@ KML
 Lanczos
 lazyraster
 libs
+longlat
 MacOS
 minmax
 modularity
@@ -82,6 +84,7 @@ OSX
 persientent
 podaac
 pre
+proj
 RasterIO
 rasters
 Rcpp
@@ -105,6 +108,7 @@ subdatasets
 Subdatasets
 Thredds
 tibbles
+useable
 valgrind
 varname
 virtualize

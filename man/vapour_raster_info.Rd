@@ -30,6 +30,7 @@ The structural metadata are
 \item{tilesXY}{dimensions x-y of internal tiling scheme}
 \item{projection}{text version of map projection parameter string}
 \item{bands}{number of bands in the dataset}
+\item{proj4}{not implemented}
 }
 
 On access vapour functions will report on the existence of subdatasets while
@@ -61,7 +62,7 @@ dimensions, so this guide does not hold across various systems.
 \section{The Geo Transform}{
 
 
-From \url{http://www.gdal.org/gdal_datamodel.html}.
+From \url{https://gdal.org/user/raster_data_model.html}.
 
 The affine transform consists of six coefficients returned by
 \code{GDALDataset::GetGeoTransform()} which map pixel/line coordinates into

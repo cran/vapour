@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# vapour
+# vapour <img src="man/figures/logo.png" align="right" height="228" />
 
 [![Travis-CI Build
 Status](http://badges.herokuapp.com/travis/hypertidy/vapour?branch=master&env=BUILD_NAME=trusty_release&label=linux)](https://travis-ci.org/hypertidy/vapour)
@@ -15,14 +15,14 @@ status](https://ci.appveyor.com/api/projects/status/github/hypertidy/vapour?bran
 ## Overview
 
 The vapour package provides access to the basic *read* functions
-available in [GDAL](http://www.gdal.org/)for both
-[raster](http://www.gdal.org/gdal_datamodel.html) and a
-[vector](http://www.gdal.org/ogr_arch.html) data sources.
+available in [GDAL](https://www.gdal.org/) for both
+[raster](https://gdal.org/user/raster_data_model.html) and
+[vector](https://gdal.org/user/vector_data_model.html) data sources.
 
 The functions are deliberately *lower-level* than these data models and
 provide access to the component entities independently.
 
-For vector data vapour provides:
+For vector data:
 
   - read access to feature attributes.
   - read access to raw binary geometry.
@@ -32,18 +32,19 @@ For vector data vapour provides:
 
 All vector/feature read tasks can optionally apply an arbitrary limit to
 the maximum number of features read or queried, and all allow execution
-of [OGRSQL](http://www.gdal.org/ogr_sql.html) to a layer prior to data
-extraction.
+of [OGRSQL](https://gdal.org/user/ogr_sql_dialect.html) to a layer prior
+to data extraction. In combination with a SQL query a [bounding box
+spatial filter](https://gdal.org/user/ogr_sql_dialect.html#executesql)
+can be applied via the `extent` argument.
 
-For raster data vapour provides:
+For raster data:
 
   - read access to the list of available rasters within a collection
     source (subdatasets).
   - read access to *structural metadata* for individual raster sources.
   - read access for raw data using GDAL’s [RasterIO
-    framework](http://www.gdal.org/classGDALRasterBand.html#a30786c81246455321e96d73047b8edf1)
-    and its dynamic image decimation / replication resampling
-    algorithms.
+    framework](https://gdal.org/tutorials/raster_api_tut.html) and its
+    dynamic image decimation / replication resampling algorithms.
 
 The workflows available are intended to support development of
 applications in R for these vector and [raster
@@ -55,7 +56,14 @@ constrained to any particular data model.
 The package can be installed from Github.
 
 ``` r
-devtools::install_github("hypertidy/vapour", build_vignettes = TRUE)
+## install.packages("remotes")
+remotes::install_cran("vapour")
+```
+
+The development version can be installed from Github.
+
+``` r
+remotes::install_github("hypertidy/vapour")
 ```
 
 You will need development tools for building R packages.
@@ -83,13 +91,9 @@ features* and *affine-based regular rasters composed of 2D slices*.
 (GDAL will possibly remove these limitations over time but still there
 will always be value in having modularity in an ecosystem of tools.)
 
-These loftier general needs have come out of smaller more concrete
-goals, one was access to the “attributes-only” capacity of GDAL as a
-virtual database engine, and another access to the dense structures
-provided by transport vector data. GDAL’s dynamic resampling of
-arbitrary raster windows is also very useful for interactive tools on
-local data, and seems under-utilized in favour of less accessible online
-image services.
+GDAL’s dynamic resampling of arbitrary raster windows is also very
+useful for interactive tools on local data, and seems under-utilized in
+favour of less accessible online image services.
 
 This partly draws on work done in [the sf
 package](https://github.com/r-spatial/sf) and in packages `rgdal` and
@@ -102,6 +106,8 @@ is now much better, with more consistency on the libraries available on
 the CRAN machines and in other contexts.
 
 ## Warnings
+
+You might burn limbs off.
 
 It’s possible to give problematic “SELECT” statements via the `sql`
 argument. Note that the geometry readers `vapour_read_geometry`,
@@ -193,16 +199,6 @@ leaving them separate here. The three approaches are:
 library (vapour)
 ```
 
-    #> Loading vapour
-    #> 
-    #> Attaching package: 'testthat'
-    #> The following objects are masked from 'package:magrittr':
-    #> 
-    #>     equals, is_less_than, not
-    #> The following object is masked from 'package:dplyr':
-    #> 
-    #>     matches
-
 ``` r
 f_va1 <- function (fname) # read all then sub-select
 {
@@ -251,12 +247,13 @@ rbenchmark::benchmark (
                        f_va2 (fname),
                        f_va3 (fname),
                        replications = 10)
+#> manually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature count
 #>           test replications elapsed relative user.self sys.self user.child
-#> 1 f_sf1(fname)           10   0.252    4.065     0.240    0.012          0
-#> 2 f_sf2(fname)           10   0.185    2.984     0.181    0.004          0
-#> 3 f_va1(fname)           10   0.062    1.000     0.062    0.000          0
-#> 4 f_va2(fname)           10   0.076    1.226     0.064    0.012          0
-#> 5 f_va3(fname)           10   0.237    3.823     0.220    0.016          0
+#> 1 f_sf1(fname)           10   0.245    3.356     0.245    0.000          0
+#> 2 f_sf2(fname)           10   0.170    2.329     0.169    0.000          0
+#> 3 f_va1(fname)           10   0.073    1.000     0.073    0.000          0
+#> 4 f_va2(fname)           10   0.089    1.219     0.080    0.008          0
+#> 5 f_va3(fname)           10   0.225    3.082     0.209    0.016          0
 #>   sys.child
 #> 1         0
 #> 2         0
@@ -268,8 +265,8 @@ rbenchmark::benchmark (
 Reading geometries only, as opposed to the `sf` reading of all
 geometries and attributes, affords a speed increase of about 25%, while
 utilizing the SQL capabilities of
-[`ogr_sql`](http://www.gdal.org/ogr_sql.html) offers an increase of
-around 75%.
+[`ogr_sql`](https://gdal.org/user/ogr_sql_dialect.html) offers an
+increase of around 75%.
 
 ## Context
 
@@ -306,5 +303,5 @@ this level of control for many years.
 # Code of conduct
 
 Please note that this project is released with a [Contributor Code of
-Conduct](CONDUCT.md). By participating in this project you agree to
-abide by its terms.
+Conduct](https://github.com/hypertidy/vapour/blob/master/CONDUCT.md). By
+participating in this project you agree to abide by its terms.
