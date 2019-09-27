@@ -3,7 +3,7 @@ context("test-features.R")
 
 f <- system.file("extdata", "sst_c.gpkg", package = "vapour")
 f2 <- system.file("extdata/osm/myosmfile.osm", package = "vapour", mustWork = TRUE)
-
+Sys.setenv(OSM_USE_CUSTOM_INDEXING="NO")
 pfile <- "list_locality_postcode_meander_valley.tab"
 dsource <- system.file(file.path("extdata/tab", pfile), package="vapour")
 
@@ -15,19 +15,13 @@ test_that("geometry read works", {
 
   gjsn <- vapour_read_geometry_cpp(f, what = "text", textformat = "json")
   ggml <- vapour_read_geometry_cpp(f, what = "text", textformat = "gml")
-  ## can't usse sst gpkg because
-  ## kml can't be in a projection
-  expect_warning(gkml <- vapour_read_geometry_cpp(f2, what = "text", textformat = "kml"))
-
-  #gkml <- vapour_read_geometry_cpp(system.file("extdata", "point.shp", package = "vapour"),
-                      # what = "text", textformat = "kml")
-  gwkt <- vapour_read_geometry_cpp(f, what = "text", textformat = "wkt")
+ gwkt <- vapour_read_geometry_cpp(f, what = "text", textformat = "wkt")
   gext <- vapour_read_geometry_cpp(f, what = "extent")
 
   gbin %>% expect_length(7L)
   gjsn %>% expect_length(7L)
   ggml %>% expect_length(7L)
-  gkml %>% expect_length(1L)
+
   gwkt %>% expect_length(7L)
   gext %>% expect_length(7L)
   gpt %>% expect_length(7L)
@@ -40,14 +34,12 @@ test_that("geometry read works", {
   gbin[[1]] %>% expect_type("raw")
   gjsn[[1]] %>% expect_type("character") %>% grepl("MultiLineString", .) %>% expect_true()
   ggml[[1]] %>% expect_type("character") %>% grepl("gml:MultiLineString", .) %>% expect_true()
-  gkml[[1]] %>% expect_type("character")  %>% grepl("<MultiGeometry><LineString>", .) %>% expect_true()
-  gwkt[[1]] %>% expect_type("character")   %>% grepl("MULTILINESTRING \\(\\(-16254", .) %>% expect_true()
+ gwkt[[1]] %>% expect_type("character")   %>% grepl("MULTILINESTRING \\(\\(-16254", .) %>% expect_true()
   gext[[4]] %>% expect_type("double")  %>% trunc() %>% expect_identical(c(-9293382, 7088338, -6881739, 9067994))
 
   expect_identical(gjsn, vapour_read_geometry_text(f))
   expect_identical(ggml, vapour_read_geometry_text(f, textformat = "gml"))
-  expect_identical(gkml, vapour_read_geometry_text(f2, textformat = "kml"))
-  expect_warning(expect_identical(gwkt, vapour_read_geometry_text(f, textformat = "wkt")))
+  expect_silent(expect_identical(gwkt, vapour_read_geometry_text(f, textformat = "wkt")))
   expect_identical(gext, vapour_read_extent(f))
   expect_identical(vapour_layer_names(dsource,
                    sql = "SELECT 1 FROM list_locality_postcode_meander_valley"),
@@ -79,6 +71,20 @@ expect_warning(expect_equal(vapour_projection_info_cpp(f)$Proj4[1], pprj), "not 
 
 })
 
+test_that("OSM read works", {
+  skip_on_os("windows")
+  ## can't usse sst gpkg because
+  ## kml can't be in a projection
+  expect_silent(gkml <- vapour_read_geometry_cpp(f2, what = "text", textformat = "kml"))
+  gkml %>% expect_length(1L)
+  gkml[[1]] %>% expect_type("character")  %>% grepl("<Point><coordinates>", .) %>% expect_true()
+
+  expect_identical(gkml, vapour_read_geometry_text(f2, textformat = "kml"))
+
+  #gkml <- vapour_read_geometry_cpp(system.file("extdata", "point.shp", package = "vapour"),
+  # what = "text", textformat = "kml")
+
+})
 test_that("empty geometry set as expected", {
 
   efile <- system.file("extdata/point.dbf", package = "vapour")
@@ -95,7 +101,7 @@ test_that("limit_n works",
             expect_silent(vapour_geom_summary(f, limit_n = 1L)) %>% unlist() %>% expect_length(7L)
 
             expect_silent(vapour_geom_summary(dsource, limit_n = 1L)) %>% unlist() %>% expect_length(7L)
-            expect_silent(av_atts <- vapour_read_attributes(f, limit_n = 1)) %>% expect_length(2L) %>% expect_named(c("level", "sst"))
+            expect_output(av_atts <- vapour_read_attributes(f, limit_n = 1), "manually finding feature count") %>% expect_length(2L) %>% expect_named(c("level", "sst"))
             expect_silent(vapour_read_geometry(f, limit_n = 1L)) %>% expect_length(1L)
 
             expect_silent(vapour_read_geometry_text(f, limit_n = 3L)) %>% expect_length(3L)

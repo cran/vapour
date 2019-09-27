@@ -13,6 +13,10 @@ vapour_all_drivers_cpp <- function() {
     .Call('_vapour_vapour_all_drivers_cpp', PACKAGE = 'vapour')
 }
 
+warp_memory_cpp <- function(source_filename, source_WKT, target_WKT, target_geotransform, target_dim, band) {
+    .Call('_vapour_warp_memory_cpp', PACKAGE = 'vapour', source_filename, source_WKT, target_WKT, target_geotransform, target_dim, band)
+}
+
 raster_info_cpp <- function(filename, min_max) {
     .Call('_vapour_raster_info_cpp', PACKAGE = 'vapour', filename, min_max)
 }
@@ -27,6 +31,10 @@ raster_io_cpp <- function(filename, window, band = 1L, resample = "nearestneighb
 
 sds_info_cpp <- function(pszFilename) {
     .Call('_vapour_sds_info_cpp', PACKAGE = 'vapour', pszFilename)
+}
+
+proj_to_wkt_cpp <- function(proj_str) {
+    .Call('_vapour_proj_to_wkt_cpp', PACKAGE = 'vapour', proj_str)
 }
 
 vapour_driver_cpp <- function(dsource) {

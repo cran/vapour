@@ -4,10 +4,14 @@ AppVeyor
 bbox
 behaviour
 centre
+CMD
+config
+CPP
 CubicSpline
 datasource
 datasourcename
 DateTime
+dev
 dplyr
 dplyrexpt
 enum
@@ -72,6 +76,7 @@ nc
 ncols
 NearestNeighbour
 NetCDF
+NODATA
 Nowosad
 nrows
 NULLs
@@ -111,6 +116,7 @@ tibbles
 useable
 valgrind
 varname
+vectorized
 virtualize
 VRT
 vsi

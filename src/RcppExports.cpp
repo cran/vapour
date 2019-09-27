@@ -36,6 +36,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// warp_memory_cpp
+List warp_memory_cpp(CharacterVector source_filename, CharacterVector source_WKT, CharacterVector target_WKT, NumericVector target_geotransform, IntegerVector target_dim, IntegerVector band);
+RcppExport SEXP _vapour_warp_memory_cpp(SEXP source_filenameSEXP, SEXP source_WKTSEXP, SEXP target_WKTSEXP, SEXP target_geotransformSEXP, SEXP target_dimSEXP, SEXP bandSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< CharacterVector >::type source_filename(source_filenameSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type source_WKT(source_WKTSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type target_WKT(target_WKTSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type target_geotransform(target_geotransformSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type target_dim(target_dimSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type band(bandSEXP);
+    rcpp_result_gen = Rcpp::wrap(warp_memory_cpp(source_filename, source_WKT, target_WKT, target_geotransform, target_dim, band));
+    return rcpp_result_gen;
+END_RCPP
+}
 // raster_info_cpp
 List raster_info_cpp(CharacterVector filename, LogicalVector min_max);
 RcppExport SEXP _vapour_raster_info_cpp(SEXP filenameSEXP, SEXP min_maxSEXP) {
@@ -81,6 +97,17 @@ BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const char* >::type pszFilename(pszFilenameSEXP);
     rcpp_result_gen = Rcpp::wrap(sds_info_cpp(pszFilename));
+    return rcpp_result_gen;
+END_RCPP
+}
+// proj_to_wkt_cpp
+CharacterVector proj_to_wkt_cpp(CharacterVector proj_str);
+RcppExport SEXP _vapour_proj_to_wkt_cpp(SEXP proj_strSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< CharacterVector >::type proj_str(proj_strSEXP);
+    rcpp_result_gen = Rcpp::wrap(proj_to_wkt_cpp(proj_str));
     return rcpp_result_gen;
 END_RCPP
 }

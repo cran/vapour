@@ -53,7 +53,7 @@ constrained to any particular data model.
 
 ## Installation
 
-The package can be installed from Github.
+The package can be installed from CRAN.
 
 ``` r
 ## install.packages("remotes")
@@ -247,13 +247,77 @@ rbenchmark::benchmark (
                        f_va2 (fname),
                        f_va3 (fname),
                        replications = 10)
-#> manually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature countmanually finding feature count
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
+#> 
+#> manually finding feature count
 #>           test replications elapsed relative user.self sys.self user.child
-#> 1 f_sf1(fname)           10   0.245    3.356     0.245    0.000          0
-#> 2 f_sf2(fname)           10   0.170    2.329     0.169    0.000          0
-#> 3 f_va1(fname)           10   0.073    1.000     0.073    0.000          0
-#> 4 f_va2(fname)           10   0.089    1.219     0.080    0.008          0
-#> 5 f_va3(fname)           10   0.225    3.082     0.209    0.016          0
+#> 1 f_sf1(fname)           10   0.249    3.458     0.249    0.001          0
+#> 2 f_sf2(fname)           10   0.180    2.500     0.176    0.004          0
+#> 3 f_va1(fname)           10   0.072    1.000     0.064    0.008          0
+#> 4 f_va2(fname)           10   0.085    1.181     0.086    0.000          0
+#> 5 f_va3(fname)           10   0.215    2.986     0.203    0.012          0
 #>   sys.child
 #> 1         0
 #> 2         0

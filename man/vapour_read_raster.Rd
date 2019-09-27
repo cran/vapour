@@ -5,12 +5,12 @@
 \title{Raster IO (read)}
 \usage{
 vapour_read_raster(x, band = 1, window, resample = "nearestneighbour",
-  ..., sds = NULL, native = FALSE)
+  ..., sds = NULL, native = FALSE, set_na = TRUE)
 }
 \arguments{
 \item{x}{data source}
 
-\item{band}{index of which band to read}
+\item{band}{index of which band to read (1-based)}
 
 \item{window}{src_offset, src_dim, out_dim}
 
@@ -21,6 +21,11 @@ vapour_read_raster(x, band = 1, window, resample = "nearestneighbour",
 \item{sds}{index of subdataset to read (usually 1)}
 
 \item{native}{apply the full native window for read, \code{FALSE} by default}
+
+\item{set_na}{specify whether NA values should be set for the NODATA}
+}
+\value{
+list of numeric vectors (only one for 'band')
 }
 \description{
 Read a window of data from a GDAL raster source. The first argument is the source

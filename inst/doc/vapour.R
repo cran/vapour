@@ -75,7 +75,7 @@ prod(vapour_raster_info(f)$dimXY)
 
 
 ## ----gdal-flex-----------------------------------------------------------
-mm <- matrix(vapour_read_raster(f, native = TRUE), 
+mm <- matrix(vapour_read_raster(f, native = TRUE)[[1]], 
       vapour_raster_info(f)$dimXY)
 mm[mm < -1e6] <- NA
 image(mm[,ncol(mm):1], asp = 2)
