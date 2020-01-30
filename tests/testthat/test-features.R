@@ -49,8 +49,10 @@ test_that("geometry read works", {
   ## Warning 1: No translation from Polar_Stereographic to MapInfo known
   #Warning 6: Unhandled projection method Polar_Stereographic
   #expect_silent(vapour_read_attributes(dsource, layer = "list_locality_postcode_meander_valley"))
-pprj <- "+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs "
-expect_warning(expect_equal(vapour_projection_info_cpp(f)$Proj4[1], pprj), "not null")
+pprj <- "+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
+pprj2 <- "+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
+expect_warning(src0 <- trimws(vapour_projection_info_cpp(f)$Proj4[1]), "not null")
+expect_true(src0 == pprj || src0 == pprj2 )
 
   expect_silent(vapour_geom_summary(f, layer = "sst_c"))
   expect_error(vapour_geom_summary(f, layer = "nolayer"))
@@ -101,7 +103,7 @@ test_that("limit_n works",
             expect_silent(vapour_geom_summary(f, limit_n = 1L)) %>% unlist() %>% expect_length(7L)
 
             expect_silent(vapour_geom_summary(dsource, limit_n = 1L)) %>% unlist() %>% expect_length(7L)
-            expect_output(av_atts <- vapour_read_attributes(f, limit_n = 1), "manually finding feature count") %>% expect_length(2L) %>% expect_named(c("level", "sst"))
+            av_atts <- vapour_read_attributes(f, limit_n = 1) %>% expect_length(2L) %>% expect_named(c("level", "sst"))
             expect_silent(vapour_read_geometry(f, limit_n = 1L)) %>% expect_length(1L)
 
             expect_silent(vapour_read_geometry_text(f, limit_n = 3L)) %>% expect_length(3L)
@@ -131,10 +133,9 @@ test_that("extent clipping combined with sql works",
             expect_length(g3$xmin, 4L)
 
 
-            expect_output(av1 <- vapour_read_attributes(f), "manually finding feature count")
+            expect_silent(av1 <- vapour_read_attributes(f))
             expect_warning(av2 <- vapour_read_attributes(f, extent = ex))
-            expect_output(av3 <- vapour_read_attributes(f, extent = ex, sql = "SELECT * FROM sst_c"),
-                          "manually finding feature count")
+            expect_silent(av3 <- vapour_read_attributes(f, extent = ex, sql = "SELECT * FROM sst_c"))
             expect_length(av3$level, 4L)
             expect_length(av3$sst, 4L)
 
