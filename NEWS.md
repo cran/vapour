@@ -1,9 +1,21 @@
+# vapour 0.5.5
+
+* Deleted compile tests from configure, we can add proper tests if this is needed. 
+
+* Now set env vars GDAL_DATA and PROJ_LIB to vapour/gdal/ and vapour/proj/ when present (i.e. Windows generally, MacOS on CRAN). 
+* Update to configure to ensure data copy of proj/ and gdal/ on MacOS on CRAN, thanks to CRAN, Roger Bivand, and to James 
+ Balamuta for enormous help on github actions and installing the CRAN mac binaries. 
+
+* Now using GDAL 3 on Windows. 
+
+* Get available overview sizes, wish of #78. 
+
 # vapour 0.5.0
 
 * Improve tests to be more robust, thanks to CRAN. #77
 
 * Removed pesky message and failing tests thanks to Joseph Stachelek (@jsta)
- https://github.com/hypertidy/vapour/pull/76
+ #76. 
 
 # vapour 0.4.0
 

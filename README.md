@@ -3,6 +3,8 @@
 
 # vapour <img src="man/figures/logo.png" align="right" height="228" />
 
+<!-- badges: start -->
+[![R\_build\_status](https://github.com/hypertidy/vapour/workflows/R-CMD-check/badge.svg)](https://github.com/hypertidy/vapour/actions)
 [![Travis-CI Build
 Status](http://badges.herokuapp.com/travis/hypertidy/vapour?branch=master&env=BUILD_NAME=trusty_release&label=linux)](https://travis-ci.org/hypertidy/vapour)
 [![OSX Build
@@ -11,6 +13,7 @@ Status](http://badges.herokuapp.com/travis/hypertidy/vapour?branch=master&env=BU
 status](https://ci.appveyor.com/api/projects/status/github/hypertidy/vapour?branch=master&svg=true)](https://ci.appveyor.com/project/mdsumner/vapour)[![Coverage\_Status](https://img.shields.io/codecov/c/github/hypertidy/vapour/master.svg)](https://codecov.io/github/hypertidy/vapour?branch=master)
 [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/vapour)](https://cran.r-project.org/package=vapour)
 [![CRAN\_Download\_Badge](http://cranlogs.r-pkg.org/badges/vapour)](https://cran.r-project.org/package=vapour)
+<!-- badges: end -->
 
 ## Overview
 
@@ -73,6 +76,9 @@ installation, but on Windows the ROpenSci rwinlib tools are used and the
 required GDAL will be downloaded and used when building the package.
 This installation is self-contained and only affects the use of R, it
 can be used alongside other applications using GDAL.
+
+For MacOS the package build is controlled by an internal CRAN process
+including configure arguments for the gdal and proj data directories.
 
 ## Purpose
 
@@ -247,77 +253,12 @@ rbenchmark::benchmark (
                        f_va2 (fname),
                        f_va3 (fname),
                        replications = 10)
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
-#> 
-#> manually finding feature count
 #>           test replications elapsed relative user.self sys.self user.child
-#> 1 f_sf1(fname)           10   0.249    3.458     0.249    0.001          0
-#> 2 f_sf2(fname)           10   0.180    2.500     0.176    0.004          0
-#> 3 f_va1(fname)           10   0.072    1.000     0.064    0.008          0
-#> 4 f_va2(fname)           10   0.085    1.181     0.086    0.000          0
-#> 5 f_va3(fname)           10   0.215    2.986     0.203    0.012          0
+#> 1 f_sf1(fname)           10   0.319    2.279     0.309    0.010          0
+#> 2 f_sf2(fname)           10   0.248    1.771     0.232    0.016          0
+#> 3 f_va1(fname)           10   0.140    1.000     0.128    0.012          0
+#> 4 f_va2(fname)           10   0.175    1.250     0.170    0.004          0
+#> 5 f_va3(fname)           10   0.333    2.379     0.313    0.020          0
 #>   sys.child
 #> 1         0
 #> 2         0

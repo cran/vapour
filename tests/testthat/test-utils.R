@@ -15,4 +15,5 @@ test_that("utilities work", {
   expect_error(vapour_driver(""))
   expect_error(vapour_driver("1"), "Open failed")
   expect_match(vapour_driver(mvfile), "MapInfo File")
+
 })
