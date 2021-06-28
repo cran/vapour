@@ -21,6 +21,7 @@ RBIN="${R_HOME}/bin/R"
 : ${CXX=`"${RBIN}" CMD config CXX`}
 : ${CFLAGS=`"${RBIN}" CMD config CFLAGS`}
 : ${CPPFLAGS=`"${RBIN}" CMD config CPPFLAGS`}
+: ${CXXFLAGS=`"${RBIN}" CMD config CXXFLAGS`}
 : ${LDFLAGS=`"${RBIN}" CMD config LDFLAGS`}
 AC_MSG_NOTICE([CC: ${CC}])
 AC_MSG_NOTICE([CXX: ${CXX}])
@@ -118,7 +119,7 @@ else
 	echo "Error: gdal-config not found"
 	echo "The gdal-config script distributed with GDAL could not be found."
 	echo "If you have not installed the GDAL libraries, you can"
-	echo "download the source from  http://www.gdal.org/"
+	echo "download the source from  https://gdal.org/"
 	echo "If you have installed the GDAL libraries, then make sure that"
 	echo "gdal-config is in your path. Try typing gdal-config at a"
 	echo "shell prompt and see if it runs. If not, use:"
@@ -243,6 +244,51 @@ else
     GDAL_GE_250="yes"
   fi
 fi
+
+
+# Optional local copy of GDAL datadir and PROJ_LIB
+
+data_copy=no
+if test "${PROJ_GDAL_DATA_COPY}" ; then
+    data_copy=yes
+    AC_MSG_NOTICE([PROJ_GDAL_DATA_COPY used.])
+else
+    AC_ARG_WITH([data-copy],
+        AC_HELP_STRING([--with-data-copy=yes/no],
+               [local copy of data directories in package, default no]),
+               [data_copy=$withval])
+fi
+if test "${data_copy}" = "yes" ; then
+AC_MSG_NOTICE([Copy data for:])
+  proj_lib0="${PROJ_LIB}"
+  AC_ARG_WITH([proj-data],
+    AC_HELP_STRING([--with-proj-data=DIR],
+                   [location of PROJ data directory]),
+    [proj_lib1=$withval])
+  if test -n "${proj_lib0}" ; then
+    proj_lib="${proj_lib0}"
+  else
+    proj_lib="${proj_lib1}"
+  fi
+  if test -n "${proj_lib}" ; then
+    if test -d "${proj_lib}" ; then
+      cp -r "${proj_lib}" "${R_PACKAGE_DIR}"
+      AC_MSG_NOTICE([  PROJ: ${proj_lib}])
+    else
+      AC_MSG_ERROR([PROJ data files not found; set environment variable PROJ_LIB=DIR or --with-proj-data=DIR.])
+    fi
+  else
+      AC_MSG_ERROR([PROJ data files not found; set environment variable PROJ_LIB=DIR or --with-proj-data=DIR.])
+  fi
+
+  if test -d "${GDAL_DATADIR}" ; then
+    cp -r "${GDAL_DATADIR}" "${R_PACKAGE_DIR}"
+    AC_MSG_NOTICE([  GDAL: ${GDAL_DATADIR}])
+  else
+    AC_MSG_ERROR([GDAL data files not found.])
+  fi
+fi
+
 
 GDAL_DATA_TEST_FILE="${GDAL_DATADIR}/stateplane.csv"
 AC_MSG_CHECKING(GDAL: ${GDAL_DATADIR}/stateplane.csv readable)
@@ -405,6 +451,7 @@ rm -f proj_conf_test_proj.c proj_conf_test_proj
   else
 [cat > proj_conf_test_proj_api.c <<_EOCONF
 #include <stdio.h>
+#include <stdlib.h>
 #include <proj_api.h>
 
 int main() {
@@ -454,6 +501,7 @@ LIBS="${INLIBS} ${PKG_LIBS}"
 AC_MSG_CHECKING(proj_api.h presence and usability)
 [cat > proj_conf_test1.c <<_EOCONF
 #include <stdio.h>
+#include <stdlib.h>
 #include <proj_api.h>
 
 int main() {

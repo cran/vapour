@@ -4,12 +4,12 @@
 \alias{vapour_layer_names}
 \title{Read GDAL layer names}
 \usage{
-vapour_layer_names(dsource, sql = "")
+vapour_layer_names(dsource, ...)
 }
 \arguments{
 \item{dsource}{data source name (path to file, connection string, URL)}
 
-\item{sql}{if not empty this is executed against the data source (layer will be ignored)}
+\item{...}{arguments ignore for deprecated compatibility (no 'sql' argument any longer)}
 }
 \value{
 character vector of layer names

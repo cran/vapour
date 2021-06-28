@@ -6,10 +6,11 @@
 #' used on single element vectors of character strings.
 #' @param crs PROJ4 string
 #' @export
+#' @return WKT2 projection string
 #' @examples
 #' vapour_srs_wkt("+proj=laea +datum=WGS84")
 vapour_srs_wkt <- function(crs) {
-  unlist(lapply(crs, proj_to_wkt_cpp))
+  unlist(lapply(crs, proj_to_wkt_gdal_cpp))
 }
 
 
@@ -46,9 +47,9 @@ vapour_geom_summary <- function(dsource, layer = 0L, sql = "", limit_n = NULL, s
   extents <- vapour_read_extent(dsource = dsource, layer = layer, sql = sql, limit_n = limit_n, skip_n = skip_n, extent = extent)
   fids <- vapour_read_names(dsource = dsource, layer = layer, sql = sql, limit_n = limit_n, skip_n = skip_n, extent = extent)
   ## FIXME the other funs deal with these args
-  limit_n <- validate_limit_n(limit_n)
+  #limit_n <- validate_limit_n(limit_n)
   extent <- validate_extent(extent, sql)
-   types <- unlist(vapour_read_geometry_cpp(dsource = dsource, layer = layer, sql = sql, limit_n = limit_n, skip_n = skip_n, ex = extent, what = "type"))
+  types <- vapour_read_type(dsource = dsource, layer = layer, sql = sql, limit_n = limit_n, skip_n = skip_n, extent = extent)
   na_geoms <- unlist(lapply(extents, anyNA))
   list(FID = fids,
        valid_geometry = !na_geoms,
@@ -64,7 +65,7 @@ vapour_geom_summary <- function(dsource, layer = 0L, sql = "", limit_n = NULL, s
 #' Return information about the GDAL library in use.
 #'
 #' `vapour_gdal_version` returns the version of GDAL as a string. This corresponds to the "--version"
-#' as described for "GDALVersionInfo". [GDAL documentation](https://www.gdal.org/).
+#' as described for "GDALVersionInfo". [GDAL documentation](https://gdal.org/).
 #'
 #' `vapour_all_drivers` returns the names and capabilities of all available drivers, in a list. This contains:
 #' * `driver` the driver (short) name
@@ -74,9 +75,14 @@ vapour_geom_summary <- function(dsource, layer = 0L, sql = "", limit_n = NULL, s
 #' * `create` driver can create (note vapour provides no write capacity)
 #' * `copy`   driver can copy (note vapour provides no write capacity)
 #' * `virtual` driver has virtual capabilities ('vsi')
+#'
+#' `vapour_driver()` returns the short name of the driver, e.g. 'GPKG' or 'GTiff', to get the
+#' long name and other properties use `vapour_all_drivers()` and match on 'driver'.
+#'
 #' @export
 #' @aliases vapour_all_drivers vapour_driver
 #' @rdname GDAL-library
+#' @return please see Details, character vectors or lists of character vectors
 #' @examples
 #' vapour_gdal_version()
 #'
@@ -87,21 +93,22 @@ vapour_geom_summary <- function(dsource, layer = 0L, sql = "", limit_n = NULL, s
 #'
 #' as.data.frame(drv)[match(vapour_driver(f), drv$driver), ]
 vapour_gdal_version <- function() {
-  vapour_gdal_version_cpp()
+  version_gdal_cpp()
 }
 #' @rdname GDAL-library
 #' @export
 vapour_all_drivers <- function() {
-  vapour_all_drivers_cpp()
+  drivers_list_gdal_cpp()
 }
+
 
 
 #' @rdname GDAL-library
 #' @export
 #' @param dsource data source string (i.e. file name or URL or database connection string)
 vapour_driver <- function(dsource) {
-  stopifnot(is.character(dsource))
-  stopifnot(nchar(dsource) > 0)
-  vapour_driver_cpp(dsource)
+  if (!is.character(dsource)) stop("'dsource' must be a character vector")
+  if (!nchar(dsource) > 0) stop("'dsource' is an empty string")
+  driver_id_gdal_cpp(dsource);
 }
 

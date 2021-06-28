@@ -1,5 +1,5 @@
-#ifndef GDALHEADERS_H
-#define GDALHEADERS_H
+#ifndef GDALLIBRARY_H
+#define GDALLIBRARY_H
 #include <Rcpp.h>
 #include "ogrsf_frmts.h"
 //#include "ogr_api.h"
@@ -8,7 +8,7 @@
 // #include "ogr_spatialref.h" // for OGRSpatialReference
 // #include "cpl_conv.h" // for CPLFree()
 
-namespace gdalheaders {
+namespace gdallibrary {
 using namespace Rcpp;
 
 constexpr int MAX_INT =  std::numeric_limits<int>::max ();
@@ -26,6 +26,23 @@ inline void osr_cleanup() {
   OSRCleanup();
 }
 
+inline CharacterVector gdal_layer_geometry_name(OGRLayer *poLayer) {
+
+  poLayer->ResetReading();
+
+  //OGRFeature *poFeature = poLayer->GetNextFeature();
+  OGRFeatureDefn *poFDefn = poLayer->GetLayerDefn();
+  int gfields = poFDefn->GetGeomFieldCount();
+  CharacterVector out(gfields);
+  const char *geom_name;
+  for (int ig = 0; ig < gfields; ig++) {
+      OGRGeomFieldDefn *poGFDefn = poFDefn->GetGeomFieldDefn(ig);
+      geom_name =    poGFDefn->GetNameRef();
+      out[ig] = geom_name;
+  }
+  //OGRFeature::DestroyFeature( poFeature );
+  return out;
+}
 // this force function takes cheap count, checks, then more expensive, checks,
 // then iterates and resets reading
 inline double force_layer_feature_count(OGRLayer *poLayer) {
@@ -36,11 +53,11 @@ inline double force_layer_feature_count(OGRLayer *poLayer) {
   }
   if (out == -1) {
     out = 0;
-    poLayer->ResetReading();
-    while(poLayer->GetNextFeature() != NULL) {
-      out++;
-    }
-    poLayer->ResetReading();
+   poLayer->ResetReading();
+   while(poLayer->GetNextFeature() != NULL) {
+     out++;
+   }
+   poLayer->ResetReading();
   }
   return out;
 }
@@ -96,6 +113,11 @@ inline OGRLayer *gdal_layer(GDALDataset *poDS, IntegerVector layer, CharacterVec
   }
   return poLayer;
 }
+
+
+
+
+
 
 inline List gdal_list_drivers()
 {
@@ -201,12 +223,12 @@ inline Rcpp::List allocate_fields_list(OGRFeatureDefn *poFDefn, int n_features, 
 
 
 inline List gdal_read_fields(CharacterVector dsn,
-                             IntegerVector layer,
-                             CharacterVector sql,
-                             IntegerVector limit_n,
-                             IntegerVector skip_n,
-                             NumericVector ex,
-                             CharacterVector fid_column_name)
+                      IntegerVector layer,
+                      CharacterVector sql,
+                      IntegerVector limit_n,
+                      IntegerVector skip_n,
+                      NumericVector ex,
+                      CharacterVector fid_column_name)
 {
   GDALDataset       *poDS;
   poDS = (GDALDataset*) GDALOpenEx(dsn[0], GDAL_OF_VECTOR, NULL, NULL, NULL );
@@ -214,15 +236,22 @@ inline List gdal_read_fields(CharacterVector dsn,
   {
     Rcpp::stop("Open failed.\n");
   }
-  OGRLayer *poLayer = gdal_layer(poDS, layer, sql = sql, ex =  ex);
+  OGRLayer *poLayer = gdal_layer(poDS, layer, sql, ex);
 
   OGRFeature *poFeature;
 
-  double  nFeature = force_layer_feature_count(poLayer);
+  //double  nFeature = force_layer_feature_count(poLayer);
+  // trying to fix SQL problem 2020-10-05
+  double nFeature = poLayer->GetFeatureCount();
+if (nFeature < 1) {
+  Rprintf("force count\n");
+  nFeature = force_layer_feature_count(poLayer);
+}
 
+//Rprintf("%i\n", nFeature);
   if (nFeature > MAX_INT) {
     Rcpp::warning("Number of features exceeds maximal number able to be read");
-    nFeature = MAX_INT;
+   nFeature = MAX_INT;
   }
   // this is poorly laid out but works, check twice to avoid
   // over allocating as per #60
@@ -311,11 +340,18 @@ inline DoubleVector gdal_feature_count(CharacterVector dsn,
     Rcpp::stop("Open failed.\n");
   }
 
-  OGRLayer *poLayer = gdal_layer(poDS, layer, sql = sql, ex =  ex);
+  OGRLayer *poLayer = gdal_layer(poDS, layer, sql, ex);
 
   poLayer->ResetReading();
-  double nFeature = force_layer_feature_count(poLayer);
+  //  double nFeature = force_layer_feature_count(poLayer);
+  // trying to fix SQL problem 2020-10-05
+  double nFeature = poLayer->GetFeatureCount();
+  if (nFeature < 1) {
+    Rprintf("force count\n");
+    nFeature = force_layer_feature_count(poLayer);
+  }
 
+//Rprintf("%i\n", nFeature);
   // clean up if SQL was used https://www.gdal.org/classGDALDataset.html#ab2c2b105b8f76a279e6a53b9b4a182e0
   if (sql[0] != "") {
     poDS->ReleaseResultSet(poLayer);
@@ -368,13 +404,13 @@ inline CharacterVector gdal_layer_names(CharacterVector dsn)
 
 
 inline List gdal_read_geometry(CharacterVector dsn,
-                               IntegerVector layer,
-                               CharacterVector sql,
-                               CharacterVector what,
-                               CharacterVector textformat,
-                               IntegerVector limit_n,
-                               IntegerVector skip_n,
-                               NumericVector ex)
+                                     IntegerVector layer,
+                                     CharacterVector sql,
+                                     CharacterVector what,
+                                     CharacterVector textformat,
+                                     IntegerVector limit_n,
+                                     IntegerVector skip_n,
+                                     NumericVector ex)
 {
   GDALDataset       *poDS;
   poDS = (GDALDataset*) GDALOpenEx(dsn[0], GDAL_OF_VECTOR, NULL, NULL, NULL );
@@ -382,7 +418,7 @@ inline List gdal_read_geometry(CharacterVector dsn,
   {
     Rcpp::stop("Open failed.\n");
   }
-  OGRLayer *poLayer = gdal_layer(poDS, layer, sql = sql, ex =  ex);
+  OGRLayer *poLayer = gdal_layer(poDS, layer, sql, ex);
 
   OGRFeature *poFeature;
   poLayer->ResetReading();
@@ -391,7 +427,13 @@ inline List gdal_read_geometry(CharacterVector dsn,
   CollectorList feature_xx;
   int iFeature = 0;
   int lFeature = 0;
-  int   nFeature = force_layer_feature_count(poLayer);
+  //int   nFeature = force_layer_feature_count(poLayer);
+  // trying to fix SQL problem 2020-10-05
+  double nFeature = poLayer->GetFeatureCount();
+  if (nFeature < 1) {
+    Rprintf("force count\n");
+    nFeature = force_layer_feature_count(poLayer);
+  }
 
   if (nFeature > MAX_INT) {
     nFeature = MAX_INT;
@@ -504,6 +546,7 @@ inline List gdal_read_geometry(CharacterVector dsn,
           feature_xx.push_back(r_gtyp);
         }
       }
+
       OGRFeature::DestroyFeature( poFeature );
       lFeature = lFeature + 1;
     }  //    if (iFeature >= skip_n[0]) {  // we are at skip_n
@@ -532,21 +575,24 @@ inline List gdal_read_geometry(CharacterVector dsn,
 
 
 inline List gdal_read_names(CharacterVector dsn,
-                            IntegerVector layer,
-                            CharacterVector sql,
-                            IntegerVector limit_n,
-                            IntegerVector skip_n,
-                            NumericVector ex)
+                           IntegerVector layer,
+                           CharacterVector sql,
+                           IntegerVector limit_n,
+                           IntegerVector skip_n,
+                           NumericVector ex)
 {
 
   GDALDataset       *poDS;
-  poDS = (GDALDataset*) GDALOpenEx(dsn[0], GDAL_OF_VECTOR, NULL, NULL, NULL );
+
+  poDS = (GDALDataset*) GDALOpenEx(dsn[0], GDAL_OF_VECTOR | GDAL_OF_READONLY, NULL, NULL, NULL );
+
   if( poDS == NULL )
   {
     Rcpp::stop("Open failed.\n");
   }
 
-  OGRLayer *poLayer = gdal_layer(poDS, layer, sql = sql, ex =  ex);
+
+  OGRLayer *poLayer = gdal_layer(poDS, layer, sql, ex);
 
   OGRFeature *poFeature;
   poLayer->ResetReading();
@@ -555,12 +601,18 @@ inline List gdal_read_names(CharacterVector dsn,
   CollectorList feature_xx;
   int iFeature = 0;
   int lFeature = 0;
-  double   nFeature = force_layer_feature_count(poLayer);
+ // double   nFeature = force_layer_feature_count(poLayer);
+  // trying to fix SQL problem 2020-10-05
+  double nFeature = poLayer->GetFeatureCount();
+  if (nFeature < 1) {
+    Rprintf("force count\n");
+    nFeature = force_layer_feature_count(poLayer);
+  }
 
 
   if (nFeature > MAX_INT) {
     Rcpp::warning("Number of features exceeds maximal number able to be read");
-    nFeature = MAX_INT;
+   nFeature = MAX_INT;
   }
 
   if (limit_n[0] > 0) {
@@ -580,6 +632,7 @@ inline List gdal_read_names(CharacterVector dsn,
 
   double aFID;
   Rcpp::NumericVector rFID(1);
+
   while( (poFeature = poLayer->GetNextFeature()) != NULL )
   {
 
@@ -594,6 +647,7 @@ inline List gdal_read_names(CharacterVector dsn,
     if (limit_n[0] > 0 && lFeature >= limit_n[0]) {
       break;  // short-circuit for limit_n
     }
+
   }
   // clean up if SQL was used https://www.gdal.org/classGDALDataset.html#ab2c2b105b8f76a279e6a53b9b4a182e0
   if (sql[0] != "") {
@@ -624,8 +678,8 @@ inline CharacterVector gdal_proj_to_wkt(CharacterVector proj_str) {
 }
 
 inline List gdal_projection_info(CharacterVector dsn,
-                                 IntegerVector layer,
-                                 CharacterVector sql)
+                                IntegerVector layer,
+                                CharacterVector sql)
 {
   GDALDataset       *poDS;
   poDS = (GDALDataset*) GDALOpenEx(dsn[0], GDAL_OF_VECTOR, NULL, NULL, NULL );
@@ -656,7 +710,7 @@ inline List gdal_projection_info(CharacterVector dsn,
     // do nothing, or warn
     // e.g. .shp with no .prj
   } else {
-    // Rcpp::warning("not null");
+   // Rcpp::warning("not null");
     // SRS is not NULL, so explore validation
     //  OGRErr err = SRS->Validate();
     SRS->exportToProj4(&proj);
@@ -695,8 +749,8 @@ inline List gdal_projection_info(CharacterVector dsn,
 
 
 inline CharacterVector gdal_report_fields(Rcpp::CharacterVector dsource,
-                                          Rcpp::IntegerVector layer = 0,
-                                          Rcpp::CharacterVector sql = "")
+                                             Rcpp::IntegerVector layer = 0,
+                                             Rcpp::CharacterVector sql = "")
 {
 
   GDALDataset       *poDS;
@@ -800,7 +854,18 @@ inline CharacterVector gdal_report_fields(Rcpp::CharacterVector dsource,
 
 inline CharacterVector  gdal_vsi_list(CharacterVector urlpath)
 {
-  char **VSI_paths = VSIReadDir(urlpath[0]);
+
+  // char** VSI_paths;
+  // if ( STARTS_WITH(urlpath[0], "/vsizip/") ||
+  //      STARTS_WITH(urlpath[0], "/vsitar/") )
+  // {
+  //   VSI_paths = VSIReadDirRecursive(urlpath[0]);
+  // } else
+  // {
+  //   VSI_paths = VSIReadDirRecursive(urlpath[0]);
+  // }
+  //
+  char** VSI_paths  = VSIReadDirRecursive(urlpath[0]);
   int ipath = 0; // iterate though MetadataDomainList
   while (VSI_paths && VSI_paths[ipath] != NULL) {
     ipath++;
@@ -808,6 +873,7 @@ inline CharacterVector  gdal_vsi_list(CharacterVector urlpath)
 
   Rcpp::CharacterVector names(ipath);
   for (int i = 0; i < ipath; i++) {
+
     names[i] = VSI_paths[i];
   }
   CSLDestroy(VSI_paths);
@@ -1065,9 +1131,9 @@ inline List gdal_raster_gcp(CharacterVector dsn) {
 
 
 inline List gdal_raster_io(CharacterVector dsn,
-                           IntegerVector window,
-                           IntegerVector band,
-                           CharacterVector resample)
+                   IntegerVector window,
+                   IntegerVector band,
+                   CharacterVector resample)
 {
 
   int Xoffset = window[0];
@@ -1183,5 +1249,5 @@ inline List gdal_raster_io(CharacterVector dsn,
 }
 
 
-} // namespace gdalheaders
+} // namespace gdallibrary
 #endif

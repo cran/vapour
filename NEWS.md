@@ -1,3 +1,49 @@
+# vapour 0.6.5
+
+* Fix to configure for Fedora thanks to Inaki Ucar (@Enchufa2) https://github.com/hypertidy/vapour/issues/95
+
+* `vapour_warp_raster()` now accepts an extent for the extraction with giving a dimension, it returns native 
+ pixels found within that extent. This is a special case for when you have control over the input window extent 
+ and now the dimensions implicitly. (We might formalize around storing the dimensions, extent, and crs as an 
+ attribute but that's been unnecessary so far.)
+ 
+* Input projection strings for `wkt` or `source_wkt` in `vapour_warp_raster` may be anything acceptable by GDAL itself. These 
+ include WKT variants, PROJ strings, EPSG strings, and file names. 
+
+* The function `vapour_warp_raster()` now uses argument 'bands' rather than 'band' at the R level. The warper function 
+ correctly handles repeated band numbers in `bands` and can be set to `NULL`, to return all bands. (Note that `vapour_read_raster()`
+ still uses 'band'). 
+
+* User interface for `vapour_warp_raster()' now changed to use 'extent' and 'source_extent' in place of
+ 'geotransform' and 'source_geotransform', which are now deprecated. 
+ 
+* Function `vapour_warp_raster()` now exported, properly handles input-replacement geotransform or projection
+ for sources that have insufficient metadata. This works with a variety of input data source names (files, URLs, 
+ image servers, etc.) Overviews are automatically dealt with (by choosing the right level of detail) by using
+ the gdalwarp app library functionality. (This warp function may be refactored to use extent rather than geotransform). 
+
+* Added vsi example with zipped shapefile. 
+
+* Fixed missing stdlib.h declaration for exit() in configure tests, thanks to CRAN. #88
+
+* New function `vapour_read_type()` to return the integer geometry type (GDAL's
+wkb enum code).
+
+* `vapour_read_geometry(what = "point")` is now defunct
+
+* Major refactor to use C++ headers, so other packages can access the API
+without using R functions. There's a more comprehensive set of identifier,
+names, fields, extent, and geometry readers, and an addition of the GDALwarp()
+facility which is a generalization of RasterIO. This will now work on a much
+greater range of sources than the older RasterIO (still WIP).
+ 
+* New function `vapour_geom_name()` to get a data source geometry "column name".
+Non-database sources return an empty string *unless* `ExecuteSQL()` was called,
+and then it is "_ogr_geometry_".
+
+Typical names are 'geom' in GPKG, 'SHAPE' in GDB. 
+
+
 # vapour 0.5.5
 
 * Deleted compile tests from configure, we can add proper tests if this is needed. 

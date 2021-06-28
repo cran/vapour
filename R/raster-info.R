@@ -118,15 +118,15 @@ sds_boilerplate_checks <- function(x, sds = NULL) {
 #' @param min_max logical, control computing min and max values in source ('FALSE' by default)
 #' @param ... currently unused
 #'
+#' @return list with vectors 'geotransform', 'dimXY', 'minmax', 'tilesXY', 'projection', 'bands', 'proj4', 'nodata_value',
+#'  'overviews', 'filelist' see sections in Details for more on each element
 #' @export
 #' @examples
 #' f <- system.file("extdata", "sst.tif", package = "vapour")
 #' vapour_raster_info(f)
 vapour_raster_info <- function(x, ..., sds = NULL, min_max = FALSE) {
   datasourcename <- sds_boilerplate_checks(x, sds = sds)
-  sdsnames <- vapour_sds_names(x)
-
-  raster_info_cpp(filename = datasourcename, min_max = min_max)
+  raster_info_gdal_cpp(dsn = datasourcename, min_max = min_max)
 }
 
 #' Raster ground control points
@@ -156,9 +156,14 @@ vapour_raster_info <- function(x, ..., sds = NULL, min_max = FALSE) {
 #' ## they are rare, and tend to be in large files
 #' f <- system.file("extdata", "sst.tif", package = "vapour")
 #' vapour_raster_gcp(f)
+#'
+#' ## a very made-up example with no real use
+#' f1 <- system.file("extdata/gcps", "volcano_gcp.tif", package = "vapour")
+#' vapour_raster_gcp(f1)
+#'
 vapour_raster_gcp <- function(x, ...) {
   if (file.exists(x)) x <- normalizePath(x)
-  raster_gcp_cpp(x)
+  raster_gcp_gdal_cpp(x)
 }
 #' GDAL raster subdatasets (variables)
 #'
@@ -179,12 +184,14 @@ vapour_raster_gcp <- function(x, ...) {
 #' @export
 #'
 #' @examples
-#' f <- system.file("extdata", "sst.tif", package = "vapour")
+#' f <- system.file("extdata/gdal", "sds.nc", package = "vapour")
 #' vapour_sds_names(f)
+#'
+#' vapour_sds_names(system.file("extdata", "sst.tif", package = "vapour"))
 vapour_sds_names <- function(x) {
   if (file.exists(x)) x <- normalizePath(x)
   stopifnot(length(x) == 1L)
-  sources <- sds_info_cpp(x)
+  sources <- sds_list_gdal_cpp(x)
   if (length(sources) > 1) {
     if (length(sources) %% 2 != 0) warning(sprintf("length of subdataset info not a factor of 2 (NAME and DESC expected)"))
     sources0 <- sources

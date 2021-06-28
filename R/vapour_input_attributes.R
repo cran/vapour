@@ -55,6 +55,7 @@ validate_extent <- function(extent, sql, warn = TRUE) {
 #' See [vapour_sds_names] for more on the multiple topic.
 #'
 #' @inheritParams vapour_read_geometry
+#' @param ... arguments ignore for deprecated compatibility (no 'sql' argument any longer)
 #' @return character vector of layer names
 #'
 #' @examples
@@ -62,8 +63,32 @@ validate_extent <- function(extent, sql, warn = TRUE) {
 #' mvfile <- system.file(file.path("extdata/tab", file), package="vapour")
 #' vapour_layer_names(mvfile)
 #' @export
-vapour_layer_names <- function(dsource, sql = "") {
-  vapour_layer_names_cpp(dsource = dsource, sql = sql)
+vapour_layer_names <- function(dsource, ...) {
+  if ("sql" %in% names(list(...))) {
+    message("old 'sql' argument is unused")
+  }
+  layer_names_gdal_cpp(dsn = dsource)
+}
+
+#' Read geometry column name
+#'
+#' There might be one or more geometry column names, or it might be an empty string.
+#'
+#' It might be "", or "geom", or "_ogr_geometry_" - the last is a default name
+#' given when SQL is executed by GDAL but there was no geometry name, and 'SELECT * ' or
+#' equivalent was used.
+#'
+#' This feature is required by the DBI backend work in RGDALSQL, so that when `SELECT * ` is used
+#' we can give a reasonable name to the geometry column which is obtained separately.
+#'
+#' @inheritParams vapour_read_geometry
+#' @export
+#' @return character vector of geometry column name/s
+#' @examples
+#' file <- system.file("extdata/tab/list_locality_postcode_meander_valley.tab", package = "vapour")
+#' vapour_geom_name(file)  ## empty string
+vapour_geom_name <- function(dsource, layer = 0L, sql = "") {
+  vapour_geom_name_cpp(dsource = dsource, layer = layer, sql = sql, ex = 0)
 }
 
 #' Read feature names
@@ -79,6 +104,7 @@ vapour_layer_names <- function(dsource, sql = "") {
 #' drivers and also clashed with independent use of the `sql` argument.
 #' @inheritParams vapour_read_geometry
 #' @export
+#' @return character vector of geometry id 'names'
 #' @examples
 #' file <- "list_locality_postcode_meander_valley.tab"
 #' mvfile <- system.file(file.path("extdata/tab", file), package="vapour")
@@ -90,7 +116,7 @@ vapour_read_names <- function(dsource, layer = 0L, sql = "", limit_n = NULL, ski
   skip_n <- skip_n[1L]
   if (skip_n < 0) stop("skip_n must be 0, or higher")
   extent <- validate_extent(extent, sql)
-  fids <- vapour_read_names_cpp(dsource, layer = layer, sql = sql, limit_n = limit_n, skip_n = skip_n, ex = extent)
+  fids <- read_names_gdal_cpp(dsource, layer = layer, sql = sql, limit_n = limit_n, skip_n = skip_n, ex = extent)
   unlist(lapply(fids, function(x) if (is.null(x)) NA_real_ else x))
 }
 
@@ -105,6 +131,7 @@ vapour_read_names <- function(dsource, layer = 0L, sql = "", limit_n = NULL, ski
 #'
 #' @inheritParams vapour_read_geometry
 #' @export
+#' @return named character vector of the GDAL types for each attribute
 #' @examples
 #' file <- "list_locality_postcode_meander_valley.tab"
 #' mvfile <- system.file(file.path("extdata/tab", file), package="vapour")
@@ -115,7 +142,7 @@ vapour_read_names <- function(dsource, layer = 0L, sql = "", limit_n = NULL, ski
 #'   sql = "SELECT POSTCODE, NAME FROM list_locality_postcode_meander_valley")
 vapour_report_attributes <- function(dsource, layer = 0L, sql = "") {
   if (!is.numeric(layer)) layer <- index_layer(dsource, layer)
-  vapour_report_attributes_cpp(dsource, layer, sql = sql)
+  report_fields_gdal_cpp(dsource, layer, sql = sql)
 }
 
 
@@ -144,6 +171,11 @@ vapour_read_attributes <- function(dsource, layer = 0L, sql = "", limit_n = NULL
   if (!is.numeric(layer)) layer <- index_layer(dsource, layer)
   limit_n <- validate_limit_n(limit_n)
   extent <- validate_extent(extent, sql)
-  vapour_read_attributes_cpp(dsource = dsource, layer = layer, sql = sql, limit_n = limit_n, skip_n = skip_n, ex = extent)
+
+  read_fields_gdal_cpp(dsn = dsource, layer = layer, sql = sql, limit_n = limit_n, skip_n = skip_n,
+                       ex = extent,
+                       fid_column_name = character(0))
 }
+
+
 
