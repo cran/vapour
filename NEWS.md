@@ -1,3 +1,13 @@
+# vapour dev
+
+* Fixed CRAN windows problem with NetCDF. 
+
+* New *internal* functions `vapour_read_geometry_ia()` and `vapour_read_geometry_ij()` to read by feature id arbitrary
+and range - not sure if will make export ... `_fa()` counterpart is problematic. 
+
+* New function `vapour_layer_info()` to return the previous internal projection string info for a vector   
+ layer. 
+
 # vapour 0.6.5
 
 * Fix to configure for Fedora thanks to Inaki Ucar (@Enchufa2) https://github.com/hypertidy/vapour/issues/95

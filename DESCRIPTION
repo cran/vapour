@@ -1,7 +1,7 @@
 Package: vapour
 Title: Lightweight Access to the 'Geospatial Data Abstraction Library'
         ('GDAL')
-Version: 0.6.5
+Version: 0.7.0
 Authors@R: c(person("Michael", "Sumner", email = "mdsumner@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-2471-7511")), 
              person("Simon", "Wotherspoon", role = "ctb", comment = "figured out the mechanism for the resampling algorithm"), 
              person("Mark", "Padgham", role = "ctb", comment = "helped get started :)"), 
@@ -14,12 +14,10 @@ Authors@R: c(person("Michael", "Sumner", email = "mdsumner@gmail.com", role = c(
              person("Joseph", "Stachelek", role = "ctb"), 
              person("Even", "Rouault", role = "ctb", comment = "primary author of the COG format and its use of the GDALwarp app-library, example code used by the warper function here"), 
              person("Robert", "Hijmans", role = "ctb", comment = "wrote some source in the warper, terra package used as example/inspiration"))
-Description: Provides low-level access to 'GDAL' functionality for R packages. The aim is to minimize
-  the level of interpretation put on the 'GDAL' facilities, to enable direct use of it for a variety of purposes. 
+Description: Provides low-level access to 'GDAL' functionality for R packages.  
   'GDAL' is the 'Geospatial Data Abstraction Library' a translator for raster and vector geospatial data formats 
   that presents a single raster abstract data model and single vector abstract data model to the calling application 
-  for all supported formats <https://gdal.org/>. Other available packages 'rgdal' and 'sf' also provide access to 
-  the 'GDAL' library, but neither can be used for these lower level tasks, and both do many other tasks. 
+  for all supported formats <https://gdal.org/>. 
 Depends: R (>= 3.3.0)
 License: GPL-3
 Encoding: UTF-8
@@ -35,7 +33,7 @@ URL: https://github.com/hypertidy/vapour
 BugReports: https://github.com/hypertidy/vapour/issues
 Language: en-US
 NeedsCompilation: yes
-Packaged: 2021-06-28 01:23:59 UTC; mdsumner
+Packaged: 2021-07-04 09:14:28 UTC; mdsumner
 Author: Michael Sumner [aut, cre] (<https://orcid.org/0000-0002-2471-7511>),
   Simon Wotherspoon [ctb] (figured out the mechanism for the resampling
     algorithm),
@@ -55,4 +53,4 @@ Author: Michael Sumner [aut, cre] (<https://orcid.org/0000-0002-2471-7511>),
     used as example/inspiration)
 Maintainer: Michael Sumner <mdsumner@gmail.com>
 Repository: CRAN
-Date/Publication: 2021-06-28 07:00:02 UTC
+Date/Publication: 2021-07-04 16:50:02 UTC

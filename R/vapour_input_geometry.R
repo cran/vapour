@@ -1,3 +1,27 @@
+#' Read GDAL layer info
+#'
+#' Read GDAL layer infor for a vector data source.
+#'
+#' Currently we only return `$projection` which is a list of various formats of the projection metadata.
+#' Use `$projection$Wkt` as most authoritative, but we don't enter into the discussion or limit what
+#' might be done with this (that's up to you). Currently we see
+#' `c("Proj4", "MICoordSys", "PrettyWkt", "Wkt", "EPSG", "XML")` as names of this `$projection` element.
+#'
+#' Future versions might also include the attribute field types, the feature count, the file list, what else?
+#' @inheritParams vapour_read_geometry
+#' @param ... unused, reserved for future use
+#' @return list with a list of character vectors of projection metadata, see details
+#' @export
+#'
+#' @examples
+#' file <- "list_locality_postcode_meander_valley.tab"
+#' ## A MapInfo TAB file with polygons
+#' mvfile <- system.file(file.path("extdata/tab", file), package="vapour")
+#' names(vapour_layer_info(mvfile)$projection)
+vapour_layer_info <- function(dsource, layer = 0L, sql = "", ...) {
+  list(projection = projection_info_gdal_cpp(dsource, layer = layer, sql = sql))
+}
+
 
 #' Read GDAL feature geometry
 #'
@@ -9,6 +33,12 @@
 #'
 #' `vapour_read_geometry_cpp` will read a feature for each of the ways listed above and is used by those functions. It's recommended
 #' to use the more specialist functions rather than this more general one.
+#'
+#' `vapour_read_geometry_ia` will read features by *arbitrary index*, so any integer between 0 and one less than the number of
+#' features. These may be duplicated. If 'ia' is greater than the highest index NULL is returned, but if less than 0 the function will error.
+#'
+#' `vapour_read_geometry_ij` will read features by *index range*, so two numbers to read ever feature between those limits inclusively.
+#' 'i' and 'j' must be increasing.
 #'
 #' `vapour_read_type` will read the (wkb) type of the geometry as an integer. These are
 #' `0` unknown, `1` Point, `2` LineString, `3` Polygon, `4` MultiPoint, `5` MultiLineString,
@@ -27,6 +57,8 @@
 #' @param limit_n an arbitrary limit to the number of features scanned
 #' @param skip_n an arbitrary number of features to skip
 #' @param extent apply an arbitrary extent, only when 'sql' used (must be 'ex = c(xmin, xmax, ymin, ymax)' but sp bbox, sf bbox, and raster extent also accepted)
+#' @param ia an arbitrary index, integer vector with values between 0 and one less the number of features, duplicates allowed and arbitrary order is ok
+#' @param ij an range index, integer vector of length two with values between 0 and one less the number of features, this range of geometries is returned
 #' @examples
 #' file <- "list_locality_postcode_meander_valley.tab"
 #' ## A MapInfo TAB file with polygons
@@ -51,7 +83,6 @@
 #' ## points in raw text (WKT)
 #' txtpointwkt <- vapour_read_geometry_text(pfile, textformat = "wkt")
 #' @export
-#' @aliases vapour_read_geometry_text vapour_read_extent
 #' @name vapour_read_geometry
 vapour_read_geometry <- function(dsource, layer = 0L, sql = "", limit_n = NULL, skip_n = 0, extent = NA) {
   if (!is.numeric(layer)) layer <- index_layer(dsource, layer)
