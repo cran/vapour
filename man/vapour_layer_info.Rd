@@ -4,7 +4,14 @@
 \alias{vapour_layer_info}
 \title{Read GDAL layer info}
 \usage{
-vapour_layer_info(dsource, layer = 0L, sql = "", ...)
+vapour_layer_info(
+  dsource,
+  layer = 0L,
+  sql = "",
+  ...,
+  extent = TRUE,
+  count = TRUE
+)
 }
 \arguments{
 \item{dsource}{data source name (path to file, connection string, URL)}
@@ -14,6 +21,10 @@ vapour_layer_info(dsource, layer = 0L, sql = "", ...)
 \item{sql}{if not empty this is executed against the data source (layer will be ignored)}
 
 \item{...}{unused, reserved for future use}
+
+\item{extent}{logical to control if extent calculated and returned, TRUE by default (set to FALSE to avoid the extra calculation and missing value is the result)}
+
+\item{count}{logical to control if count calculated and returned, TRUE by default (set to FALSE to avoid the extra calculation and missing value is the result)}
 }
 \value{
 list with a list of character vectors of projection metadata, see details
@@ -22,16 +33,35 @@ list with a list of character vectors of projection metadata, see details
 Read GDAL layer information for a vector data source.
 }
 \details{
-Currently we only return \verb{$projection} which is a list of various formats of the projection metadata.
+Set \code{extent} and/or \code{count} to \code{FALSE} to avoid calculating them if not needed, it might take some time.
+
+The layer information elements are
+
+\describe{
+\item{dsn}{the data source name}
+\item{driver}{the short name of the driver used}
+\item{layer}{the name of the layer queried}
+\item{layer_names}{the name/s of all available layers (see \link{vapour_layer_names})}
+\item{fields}{a named vector of field types (see \link{vapour_report_fields})}
+\item{count}{the number of features in this data source (can be turned off to avoid the extra work \code{count})}
+\item{extent}{the extent of all features xmin, xmax, ymin, ymax (can be turned off to avoid the extra work \code{extent})}
+\item{projection}{a list of character strings, see next}
+}
+
+\verb{$projection} is a list of various formats of the projection metadata.
 Use \verb{$projection$Wkt} as most authoritative, but we don't enter into the discussion or limit what
 might be done with this (that's up to you). Currently we see
 \code{c("Proj4", "MICoordSys", "PrettyWkt", "Wkt", "EPSG", "XML")} as names of this \verb{$projection} element.
 
-Future versions might also include the attribute field types, the feature count, the file list, what else?
+To get the geometry type/s of a layer see \code{\link[=vapour_read_type]{vapour_read_type()}}.
 }
 \examples{
 file <- "list_locality_postcode_meander_valley.tab"
 ## A MapInfo TAB file with polygons
 mvfile <- system.file(file.path("extdata/tab", file), package="vapour")
-names(vapour_layer_info(mvfile)$projection)
+info <- vapour_layer_info(mvfile)
+names(info$projection)
+}
+\seealso{
+vapour_geom_name vapour_layer_names vapour_report_fields vapour_read_fields vapour_driver vapour_read_names
 }

@@ -36,9 +36,9 @@ inline CharacterVector gdal_layer_geometry_name(OGRLayer *poLayer) {
   CharacterVector out(gfields);
   const char *geom_name;
   for (int ig = 0; ig < gfields; ig++) {
-      OGRGeomFieldDefn *poGFDefn = poFDefn->GetGeomFieldDefn(ig);
-      geom_name =    poGFDefn->GetNameRef();
-      out[ig] = geom_name;
+    OGRGeomFieldDefn *poGFDefn = poFDefn->GetGeomFieldDefn(ig);
+    geom_name =    poGFDefn->GetNameRef();
+    out[ig] = geom_name;
   }
   //OGRFeature::DestroyFeature( poFeature );
   return out;
@@ -53,11 +53,11 @@ inline double force_layer_feature_count(OGRLayer *poLayer) {
   }
   if (out == -1) {
     out = 0;
-   poLayer->ResetReading();
-   while(poLayer->GetNextFeature() != NULL) {
-     out++;
-   }
-   poLayer->ResetReading();
+    poLayer->ResetReading();
+    while(poLayer->GetNextFeature() != NULL) {
+      out++;
+    }
+    poLayer->ResetReading();
   }
   return out;
 }
@@ -207,6 +207,9 @@ inline Rcpp::List allocate_fields_list(OGRFeatureDefn *poFDefn, int n_features, 
     case OFTInteger64List:
       out[i] = Rcpp::List(n_features);
       break;
+    case OFTBinary:
+      out[i] = Rcpp::List(n_features);
+      break;
     case OFTString:
     default:
       out[i] = Rcpp::CharacterVector(n_features);
@@ -223,12 +226,12 @@ inline Rcpp::List allocate_fields_list(OGRFeatureDefn *poFDefn, int n_features, 
 
 
 inline List gdal_read_fields(CharacterVector dsn,
-                      IntegerVector layer,
-                      CharacterVector sql,
-                      IntegerVector limit_n,
-                      IntegerVector skip_n,
-                      NumericVector ex,
-                      CharacterVector fid_column_name)
+                             IntegerVector layer,
+                             CharacterVector sql,
+                             IntegerVector limit_n,
+                             IntegerVector skip_n,
+                             NumericVector ex,
+                             CharacterVector fid_column_name)
 {
   GDALDataset       *poDS;
   poDS = (GDALDataset*) GDALOpenEx(dsn[0], GDAL_OF_VECTOR, NULL, NULL, NULL );
@@ -243,15 +246,15 @@ inline List gdal_read_fields(CharacterVector dsn,
   //double  nFeature = force_layer_feature_count(poLayer);
   // trying to fix SQL problem 2020-10-05
   double nFeature = poLayer->GetFeatureCount();
-if (nFeature < 1) {
-  Rprintf("force count\n");
-  nFeature = force_layer_feature_count(poLayer);
-}
+  if (nFeature < 1) {
+    Rprintf("force count\n");
+    nFeature = force_layer_feature_count(poLayer);
+  }
 
-//Rprintf("%i\n", nFeature);
+  //Rprintf("%i\n", nFeature);
   if (nFeature > MAX_INT) {
     Rcpp::warning("Number of features exceeds maximal number able to be read");
-   nFeature = MAX_INT;
+    nFeature = MAX_INT;
   }
   // this is poorly laid out but works, check twice to avoid
   // over allocating as per #60
@@ -308,6 +311,21 @@ if (nFeature < 1) {
           nv[lFeature] = poFeature->GetFieldAsString( iField );
 
         }
+
+        if( poFieldDefn->GetType() == OFTBinary ) {
+          Rcpp::List nv;
+          nv = out[iField];
+          //nv = out[iField];
+          int bytecount;
+          const GByte *bin = poFeature->GetFieldAsBinary(iField, &bytecount);
+          RawVector rb(bytecount);
+         for (int ib = 0; ib < bytecount; ib++) {
+           rb[ib] = bin[ib];
+         }
+         nv[lFeature] = rb;
+        }
+
+
       }
       // so we start counting
       lFeature = lFeature + 1;
@@ -351,7 +369,7 @@ inline DoubleVector gdal_feature_count(CharacterVector dsn,
     nFeature = force_layer_feature_count(poLayer);
   }
 
-//Rprintf("%i\n", nFeature);
+  //Rprintf("%i\n", nFeature);
   // clean up if SQL was used https://www.gdal.org/classGDALDataset.html#ab2c2b105b8f76a279e6a53b9b4a182e0
   if (sql[0] != "") {
     poDS->ReleaseResultSet(poLayer);
@@ -404,13 +422,13 @@ inline CharacterVector gdal_layer_names(CharacterVector dsn)
 
 
 inline List gdal_read_geometry(CharacterVector dsn,
-                                     IntegerVector layer,
-                                     CharacterVector sql,
-                                     CharacterVector what,
-                                     CharacterVector textformat,
-                                     IntegerVector limit_n,
-                                     IntegerVector skip_n,
-                                     NumericVector ex)
+                               IntegerVector layer,
+                               CharacterVector sql,
+                               CharacterVector what,
+                               CharacterVector textformat,
+                               IntegerVector limit_n,
+                               IntegerVector skip_n,
+                               NumericVector ex)
 {
   GDALDataset       *poDS;
   poDS = (GDALDataset*) GDALOpenEx(dsn[0], GDAL_OF_VECTOR, NULL, NULL, NULL );
@@ -575,11 +593,11 @@ inline List gdal_read_geometry(CharacterVector dsn,
 
 
 inline List gdal_read_names(CharacterVector dsn,
-                           IntegerVector layer,
-                           CharacterVector sql,
-                           IntegerVector limit_n,
-                           IntegerVector skip_n,
-                           NumericVector ex)
+                            IntegerVector layer,
+                            CharacterVector sql,
+                            IntegerVector limit_n,
+                            IntegerVector skip_n,
+                            NumericVector ex)
 {
 
   GDALDataset       *poDS;
@@ -601,7 +619,7 @@ inline List gdal_read_names(CharacterVector dsn,
   CollectorList feature_xx;
   int iFeature = 0;
   int lFeature = 0;
- // double   nFeature = force_layer_feature_count(poLayer);
+  // double   nFeature = force_layer_feature_count(poLayer);
   // trying to fix SQL problem 2020-10-05
   double nFeature = poLayer->GetFeatureCount();
   if (nFeature < 1) {
@@ -612,7 +630,7 @@ inline List gdal_read_names(CharacterVector dsn,
 
   if (nFeature > MAX_INT) {
     Rcpp::warning("Number of features exceeds maximal number able to be read");
-   nFeature = MAX_INT;
+    nFeature = MAX_INT;
   }
 
   if (limit_n[0] > 0) {
@@ -678,8 +696,8 @@ inline CharacterVector gdal_proj_to_wkt(CharacterVector proj_str) {
 }
 
 inline List gdal_projection_info(CharacterVector dsn,
-                                IntegerVector layer,
-                                CharacterVector sql)
+                                 IntegerVector layer,
+                                 CharacterVector sql)
 {
   GDALDataset       *poDS;
   poDS = (GDALDataset*) GDALOpenEx(dsn[0], GDAL_OF_VECTOR, NULL, NULL, NULL );
@@ -710,7 +728,7 @@ inline List gdal_projection_info(CharacterVector dsn,
     // do nothing, or warn
     // e.g. .shp with no .prj
   } else {
-   // Rcpp::warning("not null");
+    // Rcpp::warning("not null");
     // SRS is not NULL, so explore validation
     //  OGRErr err = SRS->Validate();
     SRS->exportToProj4(&proj);
@@ -749,8 +767,8 @@ inline List gdal_projection_info(CharacterVector dsn,
 
 
 inline CharacterVector gdal_report_fields(Rcpp::CharacterVector dsource,
-                                             Rcpp::IntegerVector layer = 0,
-                                             Rcpp::CharacterVector sql = "")
+                                          Rcpp::IntegerVector layer = 0,
+                                          Rcpp::CharacterVector sql = "")
 {
 
   GDALDataset       *poDS;
@@ -951,17 +969,25 @@ inline List gdal_raster_info(CharacterVector dsn, LogicalVector min_max)
   //poDataset->GetGeoTransform( adfGeoTransform );
   GDALGetGeoTransform(hDataset, adfGeoTransform );
 
+
   // bail out NOW (we have no SDS and/or no rasters)
   // #f <- system.file("h5ex_t_enum.h5", package = "h5")
   if (GDALGetRasterCount(hDataset) < 1) {
     Rcpp::stop("no rasters found in dataset");
   }
+
   Rcpp::DoubleVector trans(6);
   for (int ii = 0; ii < 6; ii++) trans[ii] = adfGeoTransform[ii];
 
   char **pfilelist = GDALGetFileList(hDataset);
-  CharacterVector FileList = CharacterVector::create(*pfilelist);
 
+  CharacterVector FileList;
+  // might be no files, because image server
+  if (pfilelist == nullptr) {
+    FileList = CharacterVector::create(NA_STRING);
+  } else {
+    FileList = CharacterVector::create(*pfilelist);
+  }
   GDALRasterBandH  hBand;
   int             nBlockXSize, nBlockYSize;
   //int             bGotMin, bGotMax;
@@ -984,19 +1010,6 @@ inline List gdal_raster_info(CharacterVector dsn, LogicalVector min_max)
   //GDALGetMetadataDomainList(hBand,  )
 
 
-  // FIXME: this is unused, how to get the compression type if present?
-  char **MDdomain = GDALGetMetadataDomainList(hBand);
-
-  int mdi = 0; // iterate though MetadataDomainList
-  bool has_compress = false;
-  while (MDdomain && MDdomain[mdi] != NULL) {
-    if (strcmp(MDdomain[mdi], "COMPRESS") == 0) {
-      has_compress = true;
-    }
-    mdi++;
-  }
-  //cleanup
-  CSLDestroy(MDdomain);
 
 
   DoubleVector vmmx(2);
@@ -1016,7 +1029,6 @@ inline List gdal_raster_info(CharacterVector dsn, LogicalVector min_max)
   const char *proj;
   proj = GDALGetProjectionRef(hDataset);
   //https://gis.stackexchange.com/questions/164279/how-do-i-create-ogrspatialreference-from-raster-files-georeference-c
-  //char *proj_tmp = (char *) proj;
   out[4] = Rcpp::CharacterVector::create(proj);
   names[4] = "projection";
 
@@ -1025,12 +1037,12 @@ inline List gdal_raster_info(CharacterVector dsn, LogicalVector min_max)
   out[5] = nBands;
   names[5] = "bands";
 
-  //char *stri;
-  //OGRSpatialReference oSRS;
-  //oSRS.importFromWkt(&proj_tmp);
-  //oSRS.exportToProj4(&stri);
-  out[6] =  Rcpp::CharacterVector::create(""); //Rcpp::CharacterVector::create(stri);
-  names[6] = "proj4";
+  char *stri;
+  OGRSpatialReference oSRS;
+  oSRS.importFromWkt(&proj);
+  oSRS.exportToProj4(&stri);
+  out[6] =  Rcpp::CharacterVector::create(stri); //Rcpp::CharacterVector::create(stri);
+  names[6] = "projstring";
 
   int succ;
   out[7] = GDALGetRasterNoDataValue(hBand, &succ);
@@ -1061,7 +1073,6 @@ inline List gdal_raster_info(CharacterVector dsn, LogicalVector min_max)
 
   out[9] = FileList;
   names[9] = "filelist";
-
 
 
 
@@ -1131,9 +1142,9 @@ inline List gdal_raster_gcp(CharacterVector dsn) {
 
 
 inline List gdal_raster_io(CharacterVector dsn,
-                   IntegerVector window,
-                   IntegerVector band,
-                   CharacterVector resample)
+                           IntegerVector window,
+                           IntegerVector band,
+                           CharacterVector resample)
 {
 
   int Xoffset = window[0];

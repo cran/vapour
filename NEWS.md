@@ -1,3 +1,23 @@
+# vapour 0.7.6
+
+* Include OFTBinary in supported field types. 
+
+* REALLY fixed the CRAN UBSAN problem. Listed here: https://github.com/hypertidy/vapour/issues/110
+
+* `vapour_raster_info()` gains 'extent' element. 
+
+* `vapour_report_fields()` new function aliased to `vapour_report_attributes()` and `vapour_read_fields()` to `vapour_read_attributes()` as more sensible names for what they do. The '_attributes' versions might be deprecated in future. 
+
+* `vapour_layer_info()` gains driver, layer name/s, fields, and feature count. 
+
+* `vapour_raster_info()` now returns `$projstring`, the proj string version of `$projection` (was called 'proj4' and previously 
+ unimplemented). The value may be an empty string. 
+ 
+* File list from `vapour_raster_info()` now returns a missing value (NA) when no files are in the list. 
+
+* Fixed a serious bug caused by 'vapour_raster_info()' attempting to create a character vector from a null pointer
+ when no file list exists for a source (such as an image server). 
+ 
 # vapour 0.7.5
 
 * Fixed input type problems found on CRAN, see https://github.com/hypertidy/vapour/issues/110. Thanks to CRAN 
