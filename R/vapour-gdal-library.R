@@ -1,16 +1,26 @@
 #' PROJ4 string to WKT
 #'
-#' Convert a PROJ4 string to Well Known Text.
+#' Convert a projstring to Well Known Text.
 #'
 #' The function is vectorized because why not, but probably only ever will be
 #' used on single element vectors of character strings.
-#' @param crs PROJ4 string
+#'
+#' Note that no sanitizing is done on inputs, we literally just 'OGRSpatialReference.SetFromUserInput(crs)' and
+#' give the output as WKT. If it's an error in GDAL it's an error in R.
+#'
+#' You can get some funky outputs from random strings, so don't do that. Common sensible inputs are WKT variants,
+#' 'AUTH:CODE's e.g. 'EPSG:3031', the 'OGC:CRS84' for long,lat WGS84, 'ESRI:<code>' and other authority variants, and
+#' datum names such as 'WGS84','NAD27' recognized by PROJ itself.
+#'
+#' See help for 'SetFromUserInput' in 'OGRSpatialReference', and 'proj_create_crs_to_crs' in PROJ.
+#'
+#' @param crs projection string, see Details.
 #' @export
 #' @return WKT2 projection string
 #' @examples
 #' vapour_srs_wkt("+proj=laea +datum=WGS84")
 vapour_srs_wkt <- function(crs) {
-  unlist(lapply(crs, proj_to_wkt_gdal_cpp))
+  do.call(c, lapply(crs, proj_to_wkt_gdal_cpp))
 }
 
 
@@ -50,14 +60,14 @@ vapour_geom_summary <- function(dsource, layer = 0L, sql = "", limit_n = NULL, s
   #limit_n <- validate_limit_n(limit_n)
   extent <- validate_extent(extent, sql)
   types <- vapour_read_type(dsource = dsource, layer = layer, sql = sql, limit_n = limit_n, skip_n = skip_n, extent = extent)
-  na_geoms <- unlist(lapply(extents, anyNA))
+  na_geoms <- unlist(lapply(extents, anyNA), use.names = FALSE)
   list(FID = fids,
        valid_geometry = !na_geoms,
        type = types,
-       xmin = unlist(lapply(extents, "[", 1L)),
-       xmax = unlist(lapply(extents, "[", 2L)),
-       ymin = unlist(lapply(extents, "[", 3L)),
-       ymax = unlist(lapply(extents, "[", 4L)))
+       xmin = unlist(lapply(extents, "[", 1L), use.names = FALSE),
+       xmax = unlist(lapply(extents, "[", 2L), use.names = FALSE),
+       ymin = unlist(lapply(extents, "[", 3L), use.names = FALSE),
+       ymax = unlist(lapply(extents, "[", 4L), use.names = FALSE))
 }
 
 #' GDAL version and drivers.

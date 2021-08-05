@@ -1,7 +1,8 @@
 ## ----setup, include = FALSE---------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  out.width = "100%"
 )
 
 ## -----------------------------------------------------------------------------
@@ -33,10 +34,9 @@ str(vapour_read_geometry_text(cfile, textformat = "wkt")[1:2])
 
 
 ## -----------------------------------------------------------------------------
-library(dplyr)
-dat <- as.data.frame(vapour_read_fields(cfile),  stringsAsFactors = FALSE) %>%
-    dplyr::mutate(wkt = vapour_read_geometry_text(cfile, textformat = "wkt"))
-glimpse(dat)
+dat <- as.data.frame(vapour_read_fields(cfile),  stringsAsFactors = FALSE)
+dat$wkt <- vapour_read_geometry_text(cfile, textformat = "wkt")
+head(dat)
 
 ## -----------------------------------------------------------------------------
 mvfile <- system.file("extdata", "tab", "list_locality_postcode_meander_valley.tab", package="vapour")

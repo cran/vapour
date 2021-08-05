@@ -4,7 +4,7 @@ author: "Michael D. Sumner"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vapour}
+  %\VignetteIndexEntry{Vapour - lightweight GDAL}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
   chunk_output_type: console
@@ -13,7 +13,8 @@ editor_options:
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  out.width = "100%"
 )
 ```
 
@@ -60,10 +61,9 @@ str(vapour_read_geometry_text(cfile, textformat = "wkt")[1:2])
 Combine these together to get a custom data set. 
 
 ```{r}
-library(dplyr)
-dat <- as.data.frame(vapour_read_fields(cfile),  stringsAsFactors = FALSE) %>%
-    dplyr::mutate(wkt = vapour_read_geometry_text(cfile, textformat = "wkt"))
-glimpse(dat)
+dat <- as.data.frame(vapour_read_fields(cfile),  stringsAsFactors = FALSE)
+dat$wkt <- vapour_read_geometry_text(cfile, textformat = "wkt")
+head(dat)
 ```
 
 

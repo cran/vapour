@@ -88,6 +88,7 @@ vapour_layer_names <- function(dsource, ...) {
 #' file <- system.file("extdata/tab/list_locality_postcode_meander_valley.tab", package = "vapour")
 #' vapour_geom_name(file)  ## empty string
 vapour_geom_name <- function(dsource, layer = 0L, sql = "") {
+  if (!is.numeric(layer)) layer <- index_layer(dsource, layer)
   vapour_geom_name_cpp(dsource = dsource, layer = layer, sql = sql, ex = 0)
 }
 
@@ -117,7 +118,7 @@ vapour_read_names <- function(dsource, layer = 0L, sql = "", limit_n = NULL, ski
   if (skip_n < 0) stop("skip_n must be 0, or higher")
   extent <- validate_extent(extent, sql)
   fids <- read_names_gdal_cpp(dsource, layer = layer, sql = sql, limit_n = limit_n, skip_n = skip_n, ex = extent)
-  unlist(lapply(fids, function(x) if (is.null(x)) NA_real_ else x))
+  unlist(lapply(fids, function(x) if (is.null(x)) NA_real_ else x), use.names = FALSE)
 }
 
 #' Read feature field types.
