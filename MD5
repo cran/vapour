@@ -1,6 +1,6 @@
-875ceab63de947a338ea3829da5db646 *DESCRIPTION
+d47767b56c26eeae195aab1cef19736a *DESCRIPTION
 1d0a0eb4c24456554b7b96e1e3d74987 *NAMESPACE
-25cdb584833768d28339f59ee806930d *NEWS.md
+8b4fec13e446e490942ce37629a17e5d *NEWS.md
 2cbf311b0d511c1815521b13a3c7af0d *R/RcppExports.R
 5a58a1e19507fc13b18671b7aa743f00 *R/index_input_geometry.R
 169f4d6217bb639bc363629be7741abc *R/raster-info.R
@@ -14,9 +14,9 @@ cd6051da33657dcfe87760a3b0a49546 *R/vapour_input_attributes.R
 7822acd226b1ebc53f0906d683841060 *R/zzz.R
 9ce1ee04929a91fa01926dfacf55e9fb *README.md
 02409fe2eae6abc279d0f5a071c161fc *build/vignette.rds
-c07680a0d7dacf8ec3ff90ad8ddc1ec1 *cleanup
-2137f72a452fc4771a3c945cfe70027d *configure
-b0615f34b21b94f6a8ea9c946f2b3592 *configure.ac
+b1b74b132f68762b2ab9f33b4d02ad37 *cleanup
+96a60fc2c5ee61cea5ada81a799bd34f *configure
+9206455810ae09180acc789dbd5c87a3 *configure.ac
 4549696370b4fa135381473e28acdeb3 *data/sst_c.rda
 f5e73922dacf10a71ce18dd74b0a6069 *data/tas_wkt.rda
 f43e0f82758ce6234bd3018fb14877ad *inst/WORDLIST
@@ -28,7 +28,7 @@ f98550ff1129d8c12f9a90528435b4cc *inst/benchmarks/limit_n.R
 7d2c9ef89a891c2c8ba5fab644ea04bc *inst/doc/feature-access.html
 6088be3c0d85e5432a7ffd036bcd2209 *inst/doc/vapour.R
 79f70a5adfb980283108ccb381d8f1a9 *inst/doc/vapour.Rmd
-2c201ddde6de8374021bb39d2df48929 *inst/doc/vapour.html
+d743cb28a5899ad194298b79270a3c7e *inst/doc/vapour.html
 d8059ea18bffa43ab4da476ccbf6175b *inst/docker/gdal-latest/Dockerfile
 3445cf5916f128eb7b9f6714cea7ba0b *inst/extdata/gcps/volcano_gcp.tif
 581c0e8179707529b3e00b1c4f63a632 *inst/extdata/gdal/complex.h5
@@ -51,7 +51,7 @@ ecccda134596aa67229f1695f444d1ef *inst/extdata/volcano_overview.tif
 9d727b3eb717aa6a2ba63204af72bbf8 *inst/extdata/vsi/point_shp.zip
 cbf89c01ed3f4c43d29bbbd0633897e6 *inst/include/gdalgeometry/gdalgeometry.h
 e7a3bb987c3729cc7e53e78dfec2a4fa *inst/include/gdallibrary/CollectorList.h
-63df0a846cad8a003c7404efd73c5ce2 *inst/include/gdallibrary/gdallibrary.h
+ef64832e485d61ef5fbc241a5bb90c87 *inst/include/gdallibrary/gdallibrary.h
 0fad2a595d4e5c85c227d5d4a83d0678 *inst/include/gdalmiscutils/gdalmiscutils.h
 bec379510aa83cad9b99a5c068ba7140 *inst/include/gdalwarpmem/gdalwarpmem.h
 014e3b7992b1495d7217954927faed67 *inst/pbf/pbf.R

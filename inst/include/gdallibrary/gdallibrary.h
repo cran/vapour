@@ -1039,7 +1039,13 @@ inline List gdal_raster_info(CharacterVector dsn, LogicalVector min_max)
 
   char *stri;
   OGRSpatialReference oSRS;
-  oSRS.importFromWkt(&proj);
+  char **cwkt = (char **) &proj;
+#if GDAL_VERSION_MAJOR <= 2 && GDAL_VERSION_MINOR <= 2
+  oSRS.importFromWkt(cwkt);
+#else
+  oSRS.importFromWkt( (const char**) cwkt);
+#endif
+
   oSRS.exportToProj4(&stri);
   out[6] =  Rcpp::CharacterVector::create(stri); //Rcpp::CharacterVector::create(stri);
   names[6] = "projstring";
