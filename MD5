@@ -1,6 +1,6 @@
-d47767b56c26eeae195aab1cef19736a *DESCRIPTION
+cff1c8ad6cfe25b626e49566e0d6a86e *DESCRIPTION
 1d0a0eb4c24456554b7b96e1e3d74987 *NAMESPACE
-8b4fec13e446e490942ce37629a17e5d *NEWS.md
+ecdfd36317ac9d8c54ea2177caba84f0 *NEWS.md
 2cbf311b0d511c1815521b13a3c7af0d *R/RcppExports.R
 5a58a1e19507fc13b18671b7aa743f00 *R/index_input_geometry.R
 169f4d6217bb639bc363629be7741abc *R/raster-info.R
@@ -15,11 +15,11 @@ cd6051da33657dcfe87760a3b0a49546 *R/vapour_input_attributes.R
 9ce1ee04929a91fa01926dfacf55e9fb *README.md
 02409fe2eae6abc279d0f5a071c161fc *build/vignette.rds
 b1b74b132f68762b2ab9f33b4d02ad37 *cleanup
-96a60fc2c5ee61cea5ada81a799bd34f *configure
-9206455810ae09180acc789dbd5c87a3 *configure.ac
+ac6eca55c61ce74074ee8c7d2808e6e2 *configure
+711ab90c34e0f2284a53eced0e8aa0d2 *configure.ac
 4549696370b4fa135381473e28acdeb3 *data/sst_c.rda
 f5e73922dacf10a71ce18dd74b0a6069 *data/tas_wkt.rda
-f43e0f82758ce6234bd3018fb14877ad *inst/WORDLIST
+56025fe566688300392a468fefd52519 *inst/WORDLIST
 4bccfa7c4340d1ed484b3d6e78d8f846 *inst/benchmarks/gdb-tab-shp.R
 3de1037ea89356424e1de66001e4536c *inst/benchmarks/gdb-tab-shp.Rmd
 f98550ff1129d8c12f9a90528435b4cc *inst/benchmarks/limit_n.R
@@ -28,7 +28,7 @@ f98550ff1129d8c12f9a90528435b4cc *inst/benchmarks/limit_n.R
 7d2c9ef89a891c2c8ba5fab644ea04bc *inst/doc/feature-access.html
 6088be3c0d85e5432a7ffd036bcd2209 *inst/doc/vapour.R
 79f70a5adfb980283108ccb381d8f1a9 *inst/doc/vapour.Rmd
-d743cb28a5899ad194298b79270a3c7e *inst/doc/vapour.html
+8c690b6e40ee210f35763273a6f50fbe *inst/doc/vapour.html
 d8059ea18bffa43ab4da476ccbf6175b *inst/docker/gdal-latest/Dockerfile
 3445cf5916f128eb7b9f6714cea7ba0b *inst/extdata/gcps/volcano_gcp.tif
 581c0e8179707529b3e00b1c4f63a632 *inst/extdata/gdal/complex.h5
