@@ -1,7 +1,7 @@
 Package: vapour
 Title: Lightweight Access to the 'Geospatial Data Abstraction Library'
         ('GDAL')
-Version: 0.8.0
+Version: 0.8.5
 Authors@R: c(person("Michael", "Sumner", email = "mdsumner@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-2471-7511")), 
              person("Simon", "Wotherspoon", role = "ctb", comment = "figured out the mechanism for the resampling algorithm"), 
              person("Mark", "Padgham", role = "ctb", comment = "helped get started :)"), 
@@ -24,7 +24,7 @@ Encoding: UTF-8
 LazyData: true
 LinkingTo: Rcpp
 Imports: Rcpp, utils
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Suggests: testthat, knitr, markdown, rmarkdown, spelling
 SystemRequirements: GDAL (>= 2.0.1), PROJ.4 (>= 4.8.0), C++11
 VignetteBuilder: knitr
@@ -32,7 +32,7 @@ URL: https://github.com/hypertidy/vapour
 BugReports: https://github.com/hypertidy/vapour/issues
 Language: en-US
 NeedsCompilation: yes
-Packaged: 2021-08-23 01:41:39 UTC; mdsumner
+Packaged: 2021-10-06 03:05:30 UTC; mdsumner
 Author: Michael Sumner [aut, cre] (<https://orcid.org/0000-0002-2471-7511>),
   Simon Wotherspoon [ctb] (figured out the mechanism for the resampling
     algorithm),
@@ -52,4 +52,4 @@ Author: Michael Sumner [aut, cre] (<https://orcid.org/0000-0002-2471-7511>),
     used as example/inspiration)
 Maintainer: Michael Sumner <mdsumner@gmail.com>
 Repository: CRAN
-Date/Publication: 2021-08-25 12:20:02 UTC
+Date/Publication: 2021-10-07 13:50:02 UTC

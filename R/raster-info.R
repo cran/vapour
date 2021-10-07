@@ -51,7 +51,7 @@ sds_boilerplate_checks <- function(x, sds = NULL) {
 #' \item{nodata_value}{not implemented}
 #' \item{overviews}{the number and size of any available overviews}
 #' \item{filelist}{the list of files involved (may be none, and so will be a single NA character value)}
-#'
+#' \item{datatype}{the band type name, in GDAL form 'Byte', 'Int16', 'Float32', etc.}
 #' }
 #'
 #' Note that the geotransform is a kind of obscure combination of the extent and dimension, I don't find it
@@ -211,12 +211,13 @@ vapour_sds_names <- function(x) {
   if (file.exists(x)) x <- normalizePath(x)
   stopifnot(length(x) == 1L)
   sources <- sds_list_gdal_cpp(x)
+  
   if (length(sources) > 1) {
     if (length(sources) %% 2 != 0) warning(sprintf("length of subdataset info not a factor of 2 (NAME and DESC expected)"))
     sources0 <- sources
     if (!sum(grepl("NAME=", sources)) == length(sources)/2) warning("sds mismatch")
     sources <- sources[seq(1, length(sources), by = 2L)]
-    sources <- unlist(lapply(strsplit(sources, "="), "[", 2), use.names = FALSE)
+    sources <- unlist(lapply(strsplit(sources, "="), function(xx) paste0(xx[-1], collapse = "=")), use.names = FALSE)
   }
   list(datasource = rep(x, length(sources)), subdataset = sources)
 }
