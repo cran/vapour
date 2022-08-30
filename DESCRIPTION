@@ -1,9 +1,8 @@
 Package: vapour
-Title: Lightweight Access to the 'Geospatial Data Abstraction Library'
-        ('GDAL')
-Version: 0.8.5
+Title: Access to the 'Geospatial Data Abstraction Library' ('GDAL')
+Version: 0.8.81
 Authors@R: c(person("Michael", "Sumner", email = "mdsumner@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-2471-7511")), 
-             person("Simon", "Wotherspoon", role = "ctb", comment = "figured out the mechanism for the resampling algorithm"), 
+             person("Simon", "Wotherspoon", role = "ctb", comment = "RasterIO configuration for resampling options"), 
              person("Mark", "Padgham", role = "ctb", comment = "helped get started :)"), 
              person("Edzer", "Pebesma", role = "ctb", comment = "wrote allocate_attribute, copied here from sf"),
              person("Roger", "Bivand", role = "ctb", comment = "wrote configure.ac, adapted here from rgdal"),
@@ -13,29 +12,29 @@ Authors@R: c(person("Michael", "Sumner", email = "mdsumner@gmail.com", role = c(
              person("Dale", "Maschette", role = c("ctb"), comment = "created the hex logo"), 
              person("Joseph", "Stachelek", role = "ctb"), 
              person("Even", "Rouault", role = "ctb", comment = "primary author of the COG format and its use of the GDALwarp app-library, example code used by the warper function here"), 
-             person("Robert", "Hijmans", role = "ctb", comment = "wrote some source in the warper, terra package used as example/inspiration"))
-Description: Provides low-level access to 'GDAL' functionality for R packages.  
+             person("Robert", "Hijmans", role = "ctb", comment = "code in terra package used as example/inspiration"))
+Description: Provides low-level access to 'GDAL' functionality.  
   'GDAL' is the 'Geospatial Data Abstraction Library' a translator for raster and vector geospatial data formats 
   that presents a single raster abstract data model and single vector abstract data model to the calling application 
-  for all supported formats <https://gdal.org/>. 
+  for all supported formats <https://gdal.org/>. This package is focussed on providing exactly and only what GDAL does, to enable
+  developing further tools. 
 Depends: R (>= 3.3.0)
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
 LinkingTo: Rcpp
-Imports: Rcpp, utils
-RoxygenNote: 7.1.2
+Imports: jsonlite, Rcpp, utils
+RoxygenNote: 7.2.1
 Suggests: testthat, knitr, markdown, rmarkdown, spelling
-SystemRequirements: GDAL (>= 2.0.1), PROJ.4 (>= 4.8.0), C++11
+SystemRequirements: GDAL (>= 2.2.3), PROJ (>= 4.8.0), C++11
 VignetteBuilder: knitr
 URL: https://github.com/hypertidy/vapour
 BugReports: https://github.com/hypertidy/vapour/issues
 Language: en-US
 NeedsCompilation: yes
-Packaged: 2021-10-06 03:05:30 UTC; mdsumner
+Packaged: 2022-08-30 06:12:42 UTC; mdsumner
 Author: Michael Sumner [aut, cre] (<https://orcid.org/0000-0002-2471-7511>),
-  Simon Wotherspoon [ctb] (figured out the mechanism for the resampling
-    algorithm),
+  Simon Wotherspoon [ctb] (RasterIO configuration for resampling options),
   Mark Padgham [ctb] (helped get started :)),
   Edzer Pebesma [ctb] (wrote allocate_attribute, copied here from sf),
   Roger Bivand [ctb] (wrote configure.ac, adapted here from rgdal),
@@ -48,8 +47,8 @@ Author: Michael Sumner [aut, cre] (<https://orcid.org/0000-0002-2471-7511>),
   Even Rouault [ctb] (primary author of the COG format and its use of the
     GDALwarp app-library, example code used by the warper function
     here),
-  Robert Hijmans [ctb] (wrote some source in the warper, terra package
-    used as example/inspiration)
+  Robert Hijmans [ctb] (code in terra package used as
+    example/inspiration)
 Maintainer: Michael Sumner <mdsumner@gmail.com>
 Repository: CRAN
-Date/Publication: 2021-10-07 13:50:02 UTC
+Date/Publication: 2022-08-30 07:10:02 UTC
