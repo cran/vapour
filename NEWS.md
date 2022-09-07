@@ -1,3 +1,16 @@
+# vapour 0.8.83
+
+* Resubmit after 0.8.82 was rejected. 
+
+* Fix examples  and documentation for 'sst_c', 'vapour_read_geometry', 'vapour_read_fields', 'vapour_create()', 'vapour_read_raster_block()' and 'vapour_write_raster_block()' from  CRAN submission. 
+
+* Clarified authorship for Jim Hester (listed as copyright holder in DESCRIPTION), removed comment from code in CollectorList.h.
+
+* Resubmit after 0.8.8.81 was removed. 
+
+* Remove obscure NetCDF/HDF5 tests that don't work on CRAN macos. 
+
+
 # vapour 0.8.81
 
 
@@ -23,7 +36,7 @@
 * Setting options for the 'vapour_warp_raster()' has been reconfigured.
 Arguments 'warp_options', 'transformation_options', 'open_options', and
 'dataset_output_options' correspond to the 'NAME=VALUE' configuration provided
-by gdalwap as '-wo', '-to', '-oo', and '-doo'. All of these should be entered in
+by gdalwarp as '-wo', '-to', '-oo', and '-doo'. All of these should be entered in
 bare form (without the '-wo', '-to' etc) but for 'options' these must be entered
 as per standard gdalwarp options. Some are disallowed and are checked for,
 triggering an error because we either set them via other arguments, or they
