@@ -27,12 +27,12 @@ inline List gdal_warp_in_memory(CharacterVector source_filename,
                                 //CharacterVector warp_options, 
                                 //CharacterVector transformation_options, 
                                 //CharacterVector open_options, 
-                               // CharacterVector output_dataset_options,
+                                // CharacterVector output_dataset_options,
                                 CharacterVector options) {
   
   
   GDALDatasetH *poSrcDS;
-  poSrcDS = static_cast<GDALDatasetH *>(CPLMalloc(sizeof(GDALDatasetH) * source_filename.size()));
+  poSrcDS = static_cast<GDALDatasetH *>(CPLMalloc(sizeof(GDALDatasetH) * static_cast<size_t>(source_filename.size())));
   bool augment;  
   augment = !source_WKT[0].empty() || source_extent.size() == 4;
   
@@ -66,37 +66,35 @@ inline List gdal_warp_in_memory(CharacterVector source_filename,
   papszArg = CSLAddString(papszArg, "-of");
   papszArg = CSLAddString(papszArg, "MEM");
   
-  if (!target_WKT[0].empty()){
-    // if supplied check that it's valid
+  if (!target_WKT[0].empty()) {
     OGRSpatialReference *oTargetSRS = nullptr;
     oTargetSRS = new OGRSpatialReference;
-    OGRErr target_chk =  oTargetSRS->SetFromUserInput(target_WKT[0]);
+    const char * strforuin = (const char *)target_WKT[0];
+    OGRErr target_chk =  oTargetSRS->SetFromUserInput(strforuin);
     if (target_chk != OGRERR_NONE) Rcpp::stop("cannot initialize target projection");
-    
-    OGRSpatialReference *oSourceSRS = nullptr;
-    oSourceSRS = new OGRSpatialReference;
-    char *st = NULL;
-    ((GDALDataset *)poSrcDS[0])->GetSpatialRef()->exportToWkt(&st);
-    
-    OGRErr source_chk =  oSourceSRS->SetFromUserInput(st);
-    if (source_chk != OGRERR_NONE) Rcpp::stop("cannot initialize source projection");
-    OGRCoordinateTransformation *poCT;
-    poCT = OGRCreateCoordinateTransformation(oSourceSRS, oTargetSRS);
-    if( poCT == NULL )	{
-      delete oTargetSRS;
-      delete oSourceSRS;
-      
-      Rcpp::stop( "Transformation to this target CRS not possible from this source dataset, target CRS given: \n\n %s \n\n", 
-                  (char *)  target_WKT[0] );
-
+    OGRSpatialReference  oSRS;
+    const OGRSpatialReference* poSrcSRS = ((GDALDataset *)poSrcDS[0])->GetSpatialRef();
+    if( poSrcSRS ) {
+      oSRS = *poSrcSRS;
+      if (!oSRS.IsEmpty()) {
+        OGRCoordinateTransformation *poCT;
+        poCT = OGRCreateCoordinateTransformation(&oSRS, oTargetSRS);
+        if( poCT == nullptr )	{
+          delete oTargetSRS;
+          Rcpp::stop( "Transformation to this target CRS not possible from this source dataset, target CRS given: \n\n %s \n\n", 
+                      (char *)  target_WKT[0] );
+        }
+        // we add our target projection iff a) source crs is valid b) target crs is valid c) transformation source->target is valid
+        // user may have augmented the array of datasets with source_projection
+        // if the source is just not defined we ignore the target with a warning
+        papszArg = CSLAddString(papszArg, "-t_srs");
+        papszArg = CSLAddString(papszArg, target_WKT[0]);
+      } else {
+        Rcpp::warning("no source crs, target crs is ignored\n");
+      }
     }
     delete oTargetSRS;
-    delete oSourceSRS;
-    
-    papszArg = CSLAddString(papszArg, "-t_srs");
-    papszArg = CSLAddString(papszArg, target_WKT[0]);
   }
-  
   // we always provide extent and dimension, crs is optional and just means subset/decimate
   double dfMinX = target_extent[0];
   double dfMaxX = target_extent[1];
@@ -130,7 +128,7 @@ inline List gdal_warp_in_memory(CharacterVector source_filename,
   GDALWarpAppOptionsSetProgress(psOptions, NULL, NULL );
   
   GDALDatasetH hRet = GDALWarp( "", nullptr,
-                                source_filename.size(), poSrcDS,
+                                static_cast<int>(source_filename.size()), poSrcDS,
                                 psOptions, nullptr);
   
   CPLAssert( hRet != NULL );
@@ -144,7 +142,7 @@ inline List gdal_warp_in_memory(CharacterVector source_filename,
     Rcpp::stop("something went wrong!");
   }
   
-
+  
   /// this doesn't work because we don't keep the file name/s
   if (band_output_type[0] == "vrt") {
     // GDALDriver * vDriver = (GDALDriver *)GDALGetDriverByName("VRT");
@@ -164,21 +162,21 @@ inline List gdal_warp_in_memory(CharacterVector source_filename,
   // Prepare to read bands
   int nBands;
   if (bands[0] == 0) {
-    nBands = GDALGetRasterCount(hRet);
+    nBands = (int)GDALGetRasterCount(hRet);
   } else {
-    nBands = bands.size();
+    nBands = (int)bands.size();
   }
-  std::vector<int> bands_to_read(nBands);
+  std::vector<int> bands_to_read(static_cast<size_t>(nBands));
   for (int i = 0; i < nBands; i++) {
     if (bands[0] == 0) {
-      bands_to_read[i] = i + 1;
+      bands_to_read[static_cast<size_t>(i)] = i + 1;
     } else {
-      bands_to_read[i] = bands[i];
+      bands_to_read[static_cast<size_t>(i)] = bands[i];
     }
     
-    if (bands_to_read[i] > GDALGetRasterCount(hRet)) {
+    if (bands_to_read[static_cast<size_t>(i)] > (int)GDALGetRasterCount(hRet)) {
       GDALClose( hRet );
-      stop("band number is not available: %i", bands_to_read[i]);
+      stop("band number is not available: %i", bands_to_read[static_cast<size_t>(i)]);
     }
     
   }
@@ -203,11 +201,11 @@ inline List gdal_warp_in_memory(CharacterVector source_filename,
   //                         0, 0, 0, &psExtraArg);
   
   List outlist = gdalraster::gdal_read_band_values(GDALDataset::FromHandle(hRet),
-                                                    window,
-                                                    bands_to_read,
-                                                    band_output_type,
-                                                    resample,
-                                                    unscale);
+                                                   window,
+                                                   bands_to_read,
+                                                   band_output_type,
+                                                   resample,
+                                                   unscale);
   
   GDALClose( hRet );
   return outlist;

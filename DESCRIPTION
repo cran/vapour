@@ -1,6 +1,6 @@
 Package: vapour
 Title: Access to the 'Geospatial Data Abstraction Library' ('GDAL')
-Version: 0.8.82
+Version: 0.9.0
 Authors@R: c(person("Michael", "Sumner", email = "mdsumner@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-2471-7511")), 
              person("Simon", "Wotherspoon", role = "ctb", comment = "RasterIO configuration for resampling options"), 
              person("Mark", "Padgham", role = "ctb", comment = "helped get started :)"), 
@@ -26,13 +26,14 @@ LinkingTo: Rcpp
 Imports: jsonlite, Rcpp, utils
 RoxygenNote: 7.2.1
 Suggests: testthat, knitr, markdown, rmarkdown, spelling
-SystemRequirements: GDAL (>= 2.2.3), PROJ (>= 4.8.0), C++11
+SystemRequirements: libgdal-dev, GDAL (>= 2.2.3), PROJ (>= 4.8.0),
+        C++11
 VignetteBuilder: knitr
 URL: https://github.com/hypertidy/vapour
 BugReports: https://github.com/hypertidy/vapour/issues
 Language: en-US
 NeedsCompilation: yes
-Packaged: 2022-09-06 09:28:00 UTC; mdsumner
+Packaged: 2022-11-02 22:56:36 UTC; mdsumner
 Author: Michael Sumner [aut, cre] (<https://orcid.org/0000-0002-2471-7511>),
   Simon Wotherspoon [ctb] (RasterIO configuration for resampling options),
   Mark Padgham [ctb] (helped get started :)),
@@ -52,4 +53,4 @@ Author: Michael Sumner [aut, cre] (<https://orcid.org/0000-0002-2471-7511>),
     example/inspiration)
 Maintainer: Michael Sumner <mdsumner@gmail.com>
 Repository: CRAN
-Date/Publication: 2022-09-07 17:50:02 UTC
+Date/Publication: 2022-11-07 14:30:02 UTC
