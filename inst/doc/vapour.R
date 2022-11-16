@@ -81,9 +81,14 @@ mm[mm < -1e6] <- NA
 image(mm[,ncol(mm):1], asp = 2)
 
 ## -----------------------------------------------------------------------------
+## note, this code assumes OGRSQL dialect
+current_dialect <- Sys.getenv("vapour.sql.dialect")
+Sys.unsetenv("vapour.sql.dialect")  ## ensure that default dialect is used 
+## (in this case it's 'OGRSQL' but we only want to record the state and reset after)
+## later on, when done do Sys.setenv(vapour.sql.dialect = current_dialect)
+
+
 vapour_read_fields(mvfile, sql = "SELECT NAME, PLAN_REF FROM list_locality_postcode_meander_valley WHERE POSTCODE < 7291")
-
-
 vapour_read_fields(mvfile, sql = "SELECT NAME, PLAN_REF, FID FROM list_locality_postcode_meander_valley WHERE POSTCODE = 7306")
 
 
@@ -101,6 +106,22 @@ vapour_read_fields(mvfile, sql = sprintf("SELECT COUNT(*) AS n FROM %s WHERE FID
 ## but SHP is 0-based
 shp <- system.file("extdata/point.shp", package="vapour")
 vapour_read_fields(shp, sql = sprintf("SELECT COUNT(*) AS n FROM %s WHERE FID < 2", "point"))
+
+## ----restore------------------------------------------------------------------
+Sys.setenv(vapour.sql.dialect = current_dialect)
+
+## ----dialect------------------------------------------------------------------
+## good citizenry
+current_dialect <- Sys.getenv("vapour.sql.dialect")
+Sys.setenv(vapour.sql.dialect = "SQLITE")
+
+## now we can use SQLITE dialect with TAB
+vapour_read_fields(mvfile, sql = sprintf("SELECT st_area(GEOMETRY) AS area FROM %s LIMIT 1 ", layer))
+
+## but with OGRSQL we need
+Sys.setenv(vapour.sql.dialect = "OGRSQL")
+vapour_read_fields(mvfile, sql = sprintf("SELECT OGR_GEOM_AREA AS area FROM %s LIMIT 1 ", layer))
+
 
 ## ----GDAL-info----------------------------------------------------------------
 vapour_gdal_version()
