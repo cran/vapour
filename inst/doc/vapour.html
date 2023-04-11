@@ -12,7 +12,7 @@
 
 <meta name="author" content="Michael D. Sumner" />
 
-<meta name="date" content="2023-01-06" />
+<meta name="date" content="2023-04-11" />
 
 <title>Vapour - lightweight GDAL</title>
 
@@ -340,7 +340,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Vapour - lightweight GDAL</h1>
 <h4 class="author">Michael D. Sumner</h4>
-<h4 class="date">2023-01-06</h4>
+<h4 class="date">2023-04-11</h4>
 
 
 
@@ -546,7 +546,7 @@ argument of ExecuteSQL</a>.</p>
 <span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 143  14</span></span>
 <span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $projection</span></span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;GEOGCRS[\&quot;WGS 84\&quot;,\n    DATUM[\&quot;World Geodetic System 1984\&quot;,\n        ELLIPSOID[\&quot;WGS 84\&quot;,6378137,298.257223563,\n            LENGTHUNIT[\&quot;metre\&quot;,1]]],\n    PRIMEM[\&quot;Greenwich\&quot;,0,\n        ANGLEUNIT[\&quot;degree\&quot;,0.0174532925199433]],\n    CS[ellipsoidal,2],\n        AXIS[\&quot;geodetic latitude (Lat)\&quot;,north,\n            ORDER[1],\n            ANGLEUNIT[\&quot;degree\&quot;,0.0174532925199433]],\n        AXIS[\&quot;geodetic longitude (Lon)\&quot;,east,\n            ORDER[2],\n            ANGLEUNIT[\&quot;degree\&quot;,0.0174532925199433]],\n    ID[\&quot;EPSG\&quot;,4326]]&quot;</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;GEOGCRS[\&quot;WGS 84\&quot;,\n    ENSEMBLE[\&quot;World Geodetic System 1984 ensemble\&quot;,\n        MEMBER[\&quot;World Geodetic System 1984 (Transit)\&quot;],\n        MEMBER[\&quot;World Geodetic System 1984 (G730)\&quot;],\n        MEMBER[\&quot;World Geodetic System 1984 (G873)\&quot;],\n        MEMBER[\&quot;World Geodetic System 1984 (G1150)\&quot;],\n        MEMBER[\&quot;World Geodetic System 1984 (G1674)\&quot;],\n        MEMBER[\&quot;World Geodetic System 1984 (G1762)\&quot;],\n        MEMBER[\&quot;World Geodetic System 1984 (G2139)\&quot;],\n        ELLIPSOID[\&quot;WGS 84\&quot;,6378137,298.257223563,\n            LENGTHUNIT[\&quot;metre\&quot;,1]],\n        ENSEMBLEACCURACY[2.0]],\n    PRIMEM[\&quot;Greenwich\&quot;,0,\n        ANGLEUNIT[\&quot;degree\&quot;,0.0174532925199433]],\n    CS[ellipsoidal,2],\n        AXIS[\&quot;geodetic latitude (Lat)\&quot;,north,\n            ORDER[1],\n            ANGLEUNIT[\&quot;degree\&quot;,0.0174532925199433]],\n        AXIS[\&quot;geodetic longitude (Lon)\&quot;,east,\n            ORDER[2],\n            ANGLEUNIT[\&quot;degree\&quot;,0.0174532925199433]],\n    USAGE[\n        SCOPE[\&quot;Horizontal component of 3D system.\&quot;],\n        AREA[\&quot;World.\&quot;],\n        BBOX[-90,-180,90,180]],\n    ID[\&quot;EPSG\&quot;,4326]]&quot;</span></span>
 <span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $bands</span></span>
 <span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1</span></span>
@@ -561,7 +561,7 @@ argument of ExecuteSQL</a>.</p>
 <span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; NULL</span></span>
 <span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $filelist</span></span>
-<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;/perm_storage/home/data/r_tmp/RtmpZjn7cC/Rinst3fadda6fbf4902/vapour/extdata/sst.tif&quot;</span></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;/tmp/RtmpgvDl0C/Rinst492864782a44a/vapour/extdata/sst.tif&quot;</span></span>
 <span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $datatype</span></span>
 <span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Float32&quot;</span></span>
@@ -570,7 +570,15 @@ argument of ExecuteSQL</a>.</p>
 <span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 140.00000 150.01000 -60.01833 -39.99722</span></span>
 <span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $subdatasets</span></span>
-<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; NULL</span></span></code></pre></div>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; NULL</span></span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $corners</span></span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;               [,1]      [,2]</span></span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; upperLeft  140.000 -39.99722</span></span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; lowerLeft  140.000 -60.01833</span></span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; lowerRight 150.010 -60.01833</span></span>
+<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; upperRight 150.010 -39.99722</span></span>
+<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; center     145.005 -50.00778</span></span></code></pre></div>
 <p>Read raster data (requires explicit setting of <code>window</code>
 argument, and is not useful without being used in the context of the
 raster dimensions).</p>
@@ -716,17 +724,17 @@ Geopackage defaults to SQLITE, because that’s what it is built upon.</p>
 <h1>GDAL information</h1>
 <p>Find the GDAL version and drivers available.</p>
 <div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">vapour_gdal_version</span>()</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;GDAL 3.4.3, released 2022/04/22&quot;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;GDAL 3.7.0dev-d04cd6a53b, released 2023/04/08 (debug build)&quot;</span></span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(<span class="fu">vapour_all_drivers</span>())</span>
 <span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; List of 7</span></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ driver : chr [1:223] &quot;VRT&quot; &quot;DERIVED&quot; &quot;GTiff&quot; &quot;COG&quot; ...</span></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ name   : chr [1:223] &quot;Virtual Raster&quot; &quot;Derived datasets using VRT pixel functions&quot; &quot;GeoTIFF&quot; &quot;Cloud optimized GeoTIFF generator&quot; ...</span></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ vector : logi [1:223] FALSE FALSE FALSE FALSE FALSE FALSE ...</span></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ raster : logi [1:223] TRUE TRUE TRUE TRUE TRUE TRUE ...</span></span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ create : logi [1:223] TRUE FALSE TRUE FALSE TRUE FALSE ...</span></span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ copy   : logi [1:223] TRUE FALSE TRUE TRUE TRUE FALSE ...</span></span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ virtual: logi [1:223] TRUE FALSE TRUE TRUE TRUE TRUE ...</span></span></code></pre></div>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ driver : chr [1:204] &quot;VRT&quot; &quot;DERIVED&quot; &quot;GTiff&quot; &quot;COG&quot; ...</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ name   : chr [1:204] &quot;Virtual Raster&quot; &quot;Derived datasets using VRT pixel functions&quot; &quot;GeoTIFF&quot; &quot;Cloud optimized GeoTIFF generator&quot; ...</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ vector : logi [1:204] FALSE FALSE FALSE FALSE FALSE FALSE ...</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ raster : logi [1:204] TRUE TRUE TRUE TRUE TRUE TRUE ...</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ create : logi [1:204] TRUE FALSE TRUE FALSE TRUE FALSE ...</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ copy   : logi [1:204] TRUE FALSE TRUE TRUE TRUE FALSE ...</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ virtual: logi [1:204] TRUE FALSE TRUE TRUE TRUE TRUE ...</span></span></code></pre></div>
 <p>Find the driver that will be used for a given data source.</p>
 <div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">vapour_driver</span>(mvfile)</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;MapInfo File&quot;</span></span></code></pre></div>
