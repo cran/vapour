@@ -49,7 +49,7 @@ overflow: visible;
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -346,15 +346,15 @@ feature access.</p>
 <div id="all" class="section level3">
 <h3>ALL</h3>
 <p>Get all the feature thingys.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode c++"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>  <span class="dt">double</span>   nFeature <span class="op">=</span> gdalheaders<span class="op">::</span>force_layer_feature_count<span class="op">(</span>poLayer<span class="op">);</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  List<span class="op">/</span>Vector out <span class="op">(</span>nFeature<span class="op">);</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">double</span> ii <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span><span class="op">(</span> <span class="op">(</span>poFeature <span class="op">=</span> poLayer<span class="op">-&gt;</span>GetNextFeature<span class="op">())</span> <span class="op">!=</span> NULL <span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>   out<span class="op">[</span>ii<span class="op">]</span> <span class="op">=</span> poFeature<span class="op">-&gt;&lt;</span>something<span class="op">&gt;;</span> </span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>   OGRFeature<span class="op">::</span>DestroyFeature<span class="op">(</span>poFeature<span class="op">);</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>   ii<span class="op">++;</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c++"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>  <span class="dt">double</span>   nFeature <span class="op">=</span> gdalheaders<span class="op">::</span>force_layer_feature_count<span class="op">(</span>poLayer<span class="op">);</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  List<span class="op">/</span>Vector out <span class="op">(</span>nFeature<span class="op">);</span></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>  <span class="dt">double</span> ii <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>  <span class="cf">while</span><span class="op">(</span> <span class="op">(</span>poFeature <span class="op">=</span> poLayer<span class="op">-&gt;</span>GetNextFeature<span class="op">())</span> <span class="op">!=</span> NULL <span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>   out<span class="op">[</span>ii<span class="op">]</span> <span class="op">=</span> poFeature<span class="op">-&gt;&lt;</span>something<span class="op">&gt;;</span> </span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>   OGRFeature<span class="op">::</span>DestroyFeature<span class="op">(</span>poFeature<span class="op">);</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>   ii<span class="op">++;</span></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>  <span class="op">}</span></span></code></pre></div>
 </div>
 <div id="ij" class="section level3">
 <h3>IJ</h3>
@@ -362,45 +362,45 @@ feature access.</p>
 <p>For <code>c(0, 0)</code> get the first feature, for
 <code>c(0, n - 1)</code> get all of them. For <code>c(0, -1)</code> that
 is a special case, there are no features.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode c++"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  ListVector out<span class="op">(</span>ij<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">-</span> ij<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">+</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">double</span> cnt <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">double</span> ii <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span><span class="op">(</span> <span class="op">(</span>poFeature <span class="op">=</span> poLayer<span class="op">-&gt;</span>GetNextFeature<span class="op">())</span> <span class="op">!=</span> NULL <span class="op">)</span> <span class="op">{</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ii <span class="op">==</span> ij<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">||</span> <span class="op">(</span>ii <span class="op">&gt;</span> ij<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">&amp;&amp;</span> ii <span class="op">&lt;=</span> ij<span class="op">[</span><span class="dv">1</span><span class="op">]))</span> <span class="op">{</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>      out<span class="op">[</span>cnt<span class="op">]</span> <span class="op">=</span> poFeature<span class="op">-&gt;&lt;</span>something<span class="op">&gt;;</span> </span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      cnt<span class="op">++;</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    ii<span class="op">++;</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    OGRFeature<span class="op">::</span>DestroyFeature<span class="op">(</span>poFeature<span class="op">);</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode c++"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  ListVector out<span class="op">(</span>ij<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">-</span> ij<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">+</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="dt">double</span> cnt <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="dt">double</span> ii <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="cf">while</span><span class="op">(</span> <span class="op">(</span>poFeature <span class="op">=</span> poLayer<span class="op">-&gt;</span>GetNextFeature<span class="op">())</span> <span class="op">!=</span> NULL <span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ii <span class="op">==</span> ij<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">||</span> <span class="op">(</span>ii <span class="op">&gt;</span> ij<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">&amp;&amp;</span> ii <span class="op">&lt;=</span> ij<span class="op">[</span><span class="dv">1</span><span class="op">]))</span> <span class="op">{</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>      out<span class="op">[</span>cnt<span class="op">]</span> <span class="op">=</span> poFeature<span class="op">-&gt;&lt;</span>something<span class="op">&gt;;</span> </span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>      cnt<span class="op">++;</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>    ii<span class="op">++;</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>    OGRFeature<span class="op">::</span>DestroyFeature<span class="op">(</span>poFeature<span class="op">);</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>  <span class="op">}</span></span></code></pre></div>
 </div>
 <div id="ia" class="section level3">
 <h3>IA</h3>
 <p>Get a subset of feature things, <em>arbitrary i</em> (in order) -
 their positional index</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode c++"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>  ListVector out<span class="op">(</span>ia<span class="op">.</span>length<span class="op">());</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">double</span> ii <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">double</span> cnt <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span><span class="op">(</span> <span class="op">(</span>poFeature <span class="op">=</span> poLayer<span class="op">-&gt;</span>GetNextFeature<span class="op">())</span> <span class="op">!=</span> NULL <span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ii <span class="op">==</span> ia<span class="op">[</span>cnt<span class="op">])</span> <span class="op">{</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>      out<span class="op">[</span>cnt<span class="op">]</span> <span class="op">=</span> poFeature<span class="op">-&gt;&lt;</span>something<span class="op">&gt;;</span> </span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>      cnt<span class="op">++;</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    ii<span class="op">++;</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    OGRFeature<span class="op">::</span>DestroyFeature<span class="op">(</span>poFeature<span class="op">);</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode c++"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>  ListVector out<span class="op">(</span>ia<span class="op">.</span>length<span class="op">());</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="dt">double</span> ii <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="dt">double</span> cnt <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="cf">while</span><span class="op">(</span> <span class="op">(</span>poFeature <span class="op">=</span> poLayer<span class="op">-&gt;</span>GetNextFeature<span class="op">())</span> <span class="op">!=</span> NULL <span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ii <span class="op">==</span> ia<span class="op">[</span>cnt<span class="op">])</span> <span class="op">{</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>      out<span class="op">[</span>cnt<span class="op">]</span> <span class="op">=</span> poFeature<span class="op">-&gt;&lt;</span>something<span class="op">&gt;;</span> </span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>      cnt<span class="op">++;</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>    ii<span class="op">++;</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>    OGRFeature<span class="op">::</span>DestroyFeature<span class="op">(</span>poFeature<span class="op">);</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>  <span class="op">}</span></span></code></pre></div>
 </div>
 <div id="fa" class="section level2">
 <h2>FA</h2>
 <p>Get a subset of feature thingys <em>arbitrary FID</em> (order
 irrelevant) - their FID <em>unique names</em></p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode c++"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>  List out<span class="op">(</span>fa<span class="op">.</span>length<span class="op">());</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(</span><span class="dt">double</span> ii <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> ii <span class="op">&lt;</span> fa<span class="op">.</span>length<span class="op">();</span> ii<span class="op">++)</span> <span class="op">{</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    GIntBig feature_id <span class="op">=</span> <span class="op">(</span>GIntBig<span class="op">)</span>fa<span class="op">[</span>ii<span class="op">];</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>      poFeature <span class="op">=</span> poLayer<span class="op">-&gt;</span>GetFeature<span class="op">(</span>feature_id<span class="op">);</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    </span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c++"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>  List out<span class="op">(</span>fa<span class="op">.</span>length<span class="op">());</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(</span><span class="dt">double</span> ii <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> ii <span class="op">&lt;</span> fa<span class="op">.</span>length<span class="op">();</span> ii<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>    GIntBig feature_id <span class="op">=</span> <span class="op">(</span>GIntBig<span class="op">)</span>fa<span class="op">[</span>ii<span class="op">];</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>      poFeature <span class="op">=</span> poLayer<span class="op">-&gt;</span>GetFeature<span class="op">(</span>feature_id<span class="op">);</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>    </span></code></pre></div>
 </div>
 
 

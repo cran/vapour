@@ -5,7 +5,7 @@
 #' 
 #' Configuration options may also be set as environment variables. 
 #' 
-#' See [GDAL config options](https://trac.osgeo.org/gdal/wiki/ConfigOptions) for
+#' See [GDAL config options](https://gdal.org/user/configoptions.html) for
 #' details on available options. 
 #' 
 #' @param option GDAL config name (see Details), character string
@@ -85,9 +85,12 @@ vapour_srs_wkt <- function(crs) {
 #' @export
 #'
 #' @examples
-#' vapour_crs_is_lonlat("+proj=laea")
-#' vapour_crs_is_lonlat("+proj=longlat")
-#' vapour_crs_is_lonlat("+init=EPSG:4326")
+#' vapour_gdal_version() ## versions to catch problems with string input
+#' vapour_proj_version()
+#' vapour_crs_is_lonlat("+proj=aeqd +lon_0=147 +lat_0=-42")
+#' vapour_crs_is_lonlat("EPSG:4326")
+#' vapour_srs_wkt("+proj=laea")
+#' vapour_crs_is_lonlat("+proj=laea +type=crs")
 #' vapour_crs_is_lonlat("OGC:CRS84")
 #' vapour_crs_is_lonlat("WGS84")
 #' vapour_crs_is_lonlat("NAD27")
@@ -165,7 +168,7 @@ vapour_geom_summary <- function(dsource, layer = 0L, sql = "", limit_n = NULL, s
 #' long name and other properties use `vapour_all_drivers()` and match on 'driver'.
 #'
 #' @export
-#' @aliases vapour_all_drivers vapour_driver
+#' @aliases vapour_all_drivers vapour_driver vapour_proj_version
 #' @rdname GDAL-library
 #' @return please see Details, character vectors or lists of character vectors
 #' @examples
@@ -173,12 +176,18 @@ vapour_geom_summary <- function(dsource, layer = 0L, sql = "", limit_n = NULL, s
 #'
 #' drv <- vapour_all_drivers()
 #'
-#' f <- system.file("extdata/sst_c.gpkg", package = "vapour")
+#' f <- system.file("extdata/sst_c.fgb", package = "vapour")
 #' vapour_driver(f)
 #'
 #' as.data.frame(drv)[match(vapour_driver(f), drv$driver), ]
 vapour_gdal_version <- function() {
   version_gdal_cpp()
+}
+
+#' @rdname GDAL-library
+#' @export 
+vapour_proj_version <- function() {
+  paste0(version_proj_cpp(), collapse = ".")
 }
 #' @rdname GDAL-library
 #' @export

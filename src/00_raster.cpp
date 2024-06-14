@@ -13,6 +13,11 @@ LogicalVector raster_has_geolocation_gdal_cpp(CharacterVector dsn, IntegerVector
   return gdalraster::gdal_has_geolocation(dsn, sds);
 }
 // [[Rcpp::export]]
+List raster_list_geolocation_gdal_cpp(CharacterVector dsn, IntegerVector sds) {
+  return gdalraster::gdal_list_geolocation(dsn, sds);
+}
+
+// [[Rcpp::export]]
 List raster_info_gdal_cpp(CharacterVector dsn, LogicalVector min_max) {
   return gdalraster::gdal_raster_info(dsn, min_max);
 }
@@ -28,8 +33,9 @@ List raster_io_gdal_cpp(CharacterVector dsn,
                         IntegerVector band,
                         CharacterVector resample,
                         CharacterVector band_output_type, 
-                        LogicalVector unscale) {
-  return gdalraster::gdal_raster_io(dsn, window, band, resample, band_output_type, unscale);
+                        LogicalVector unscale, 
+                        LogicalVector nara) {
+  return gdalraster::gdal_raster_io(dsn, window, band, resample, band_output_type, unscale, nara);
 }
 
 // [[Rcpp::export]]
@@ -47,29 +53,30 @@ List sds_list_list_gdal_cpp(CharacterVector dsn) {
 }
 
 
-// [[Rcpp::export]]
-List warp_in_memory_gdal_cpp(CharacterVector dsn,
-                             CharacterVector source_WKT,
-                             CharacterVector target_WKT,
-                             NumericVector target_extent,
-                             IntegerVector target_dim,
-                             IntegerVector bands,
-                             NumericVector source_extent,
-                             CharacterVector resample,
-                             LogicalVector silent,
-                             CharacterVector band_output_type, 
-                     
-                             CharacterVector options, 
-                             LogicalVector nomd, IntegerVector overview) {
-  return gdalwarpmem::gdal_warp_in_memory(dsn,
-                                          source_WKT,
-                                          target_WKT,
-                                          target_extent,
-                                          target_dim,
-                                          bands,
-                                          source_extent,
-                                          resample,
-                                          silent,
-                                          band_output_type, 
-                                        options, nomd, overview);
-}
+// // [[Rcpp::export]]
+// List warp_in_memory_gdal_cpp(CharacterVector dsn,
+//                              CharacterVector source_WKT,
+//                              CharacterVector target_WKT,
+//                              NumericVector target_extent,
+//                              IntegerVector target_dim,
+//                              IntegerVector bands,
+//                              NumericVector source_extent,
+//                              CharacterVector resample,
+//                              LogicalVector silent,
+//                              CharacterVector band_output_type, 
+//                      
+//                              CharacterVector options, 
+//                              LogicalVector nomd, IntegerVector overview, 
+//                              LogicalVector nara) {
+//   return gdalwarpmem::gdal_warp_in_memory(dsn,
+//                                           source_WKT,
+//                                           target_WKT,
+//                                           target_extent,
+//                                           target_dim,
+//                                           bands,
+//                                           source_extent,
+//                                           resample,
+//                                           silent,
+//                                           band_output_type, 
+//                                         options, nomd, overview, nara);
+// }

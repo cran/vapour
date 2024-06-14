@@ -15,14 +15,14 @@
 #' @param resample resampling algorithm used
 #' @param bands band or bands to include, default is first band only (use NULL or a value less that one to obtain all bands)
 #' @param band_output_type specify the band type, see [vapour_read_raster]
+#' @param include_meta metadata is attached, turn off by setting this to `FALSE`
 #' @param options general options passed to gdal warper
-#' @param out_dsn use with [gdal_raster_dsn] optionally set the output file name (or one will be generated)
+#' @param out_dsn file name for output "_dsn"
 #' @export
 #' @returns pixel values in a list vector per band, or a list of file paths
 #'
 #' @examples
 #' dsn <- system.file("extdata/sst.tif", package = "vapour")
-#' par(mfrow = c(2, 2))
 #' ## do nothing, get native
 #' X <- gdal_raster_data(dsn)
 #' 
@@ -31,10 +31,17 @@
 #' X1 <- gdal_raster_data(dsn,  target_res = 1)
 #' 
 #' ## add a cutline, and cut to it using gdal warp args
-#' cutline <- system.file("extdata/cutline_sst.gpkg", package = "vapour")
-#' X1c <- gdal_raster_data(dsn,  target_res = .1, options = c("-cutline",cutline, "-crop_to_cutline" ))
 #' 
-#' ## warp whole grid to give res
+#' if (interactive()) {
+#'  cutline <- tempfile(fileext = ".csv")
+#'  wkt <- "POLYGON ((142 -41, 149 -41, 146 -58, 142 -41))"
+#'  write.csv(data.frame(id = 1, WKT = wkt), cutline, row.names = FALSE)
+#'  X1c <- gdal_raster_data(dsn,  target_res = .5, 
+#'      options = c("-cutline",cutline, "-crop_to_cutline"))
+#'  file.remove(cutline)
+#' }
+#' 
+#' ## warp whole grid to given res
 #' X2 <- gdal_raster_data(dsn,  target_res = 25000, target_crs = "EPSG:32755")
 #' 
 #' ## specify exactly (as per vapour originally)
@@ -43,7 +50,7 @@
 #'  
 #' X4 <- gdal_raster_dsn(dsn, out_dsn = tempfile(fileext = ".tif"))
 gdal_raster_data <- function(dsn, target_crs = NULL, target_dim = NULL, target_ext = NULL, target_res = NULL, 
-                         resample = "near", bands = 1L, band_output_type = NULL, options = character()) {
+                         resample = "near", bands = 1L, band_output_type = NULL, options = character(), include_meta = TRUE) {
   
    if (is.null(target_crs)) target_crs <- "" 
    if (is.null(target_ext)) {
@@ -53,7 +60,7 @@ gdal_raster_data <- function(dsn, target_crs = NULL, target_dim = NULL, target_e
      
      if (anyNA(target_ext)) stop("NA values in 'target_ext'")
      dif <- diff(target_ext)[c(1L, 3L)]
-     if (any(!dif > 0)) stop("all 'target_ext' values must xmin < xmax, ymin < ymax")
+     if (any(!dif > 0)) stop("all 'target_ext' values must be xmin < xmax, ymin < ymax")
      
    }
    if (is.null(target_dim)) {
@@ -77,6 +84,7 @@ gdal_raster_data <- function(dsn, target_crs = NULL, target_dim = NULL, target_e
    }
    if (is.null(band_output_type)) band_output_type <- "Float64"
    if (is.null(bands)) bands <- -1
+   include_meta <- isTRUE(include_meta)
    warp_general_cpp(dsn, target_crs, 
                              as.numeric(target_ext), 
                              as.integer(target_dim), 
@@ -85,13 +93,14 @@ gdal_raster_data <- function(dsn, target_crs = NULL, target_dim = NULL, target_e
                              resample = resample, 
                              silent = FALSE, band_output_type = band_output_type, 
                              options = options, 
-                             dsn_outname = "")
+                             dsn_outname = "", 
+                    include_meta = include_meta, nara = FALSE)
 }
 
 #' @name gdal_raster_data
 #' @export
 gdal_raster_dsn <- function(dsn, target_crs = NULL, target_dim = NULL, target_ext = NULL, target_res = NULL, 
-                             resample = "near", bands = NULL, band_output_type = NULL, options = character(), out_dsn = tempfile(fileext = ".tif")) {
+                             resample = "near", bands = NULL, band_output_type = NULL, options = character(), out_dsn = tempfile(fileext = ".tif"),  include_meta = TRUE) {
   
   if (is.null(target_crs)) target_crs <- "" 
   if (is.null(target_ext)) {
@@ -101,7 +110,7 @@ gdal_raster_dsn <- function(dsn, target_crs = NULL, target_dim = NULL, target_ex
     
     if (anyNA(target_ext)) stop("NA values in 'target_ext'")
     dif <- diff(target_ext)[c(1L, 3L)]
-    if (any(!dif > 0)) stop("all 'target_ext' values must xmin < xmax, ymin < ymax")
+    if (any(!dif > 0)) stop("all 'target_ext' values must be xmin < xmax, ymin < ymax")
     
   }
   if (is.null(target_dim)) {
@@ -125,15 +134,19 @@ gdal_raster_dsn <- function(dsn, target_crs = NULL, target_dim = NULL, target_ex
   if (is.null(band_output_type)) band_output_type <- "Float64"
   #if (grepl("tif$", out_dsn)) {
     ## we'll have to do some work here
-  ## currently always COG
-  options <- c(options, "-of",  "COG")
   
+ if (!any(options == "-of")) {
+   ## currently always COG
+   options <- c(options, "-of",  "COG")
+   
+ } 
  if (!is.null(bands) || (is.integer(bands) && !length(bands) == 1 && bands[1] > 0)) {
    stop("bands cannot be set for gdal_raster_dsn, please use an upfront call to 'vapour_vrt(dsn,  bands = )' to create the dsn")
  } else {
    bands <- -1
  }
-  
+  include_meta <- isTRUE(include_meta)
+
   warp_general_cpp(dsn, target_crs, 
                             target_ext, 
                             target_dim, 
@@ -142,24 +155,25 @@ gdal_raster_dsn <- function(dsn, target_crs = NULL, target_dim = NULL, target_ex
                             resample = resample, 
                             silent = FALSE, band_output_type = band_output_type, 
                             options = options, 
-                            dsn_outname = out_dsn[1L])
+                            dsn_outname = out_dsn[1L], include_meta = include_meta, nara = FALSE)
 }
 
 #' @name gdal_raster_data
 #' @export
 gdal_raster_image <- function(dsn, target_crs = NULL, target_dim = NULL, target_ext = NULL, target_res = NULL, 
-                               resample = "near", bands = NULL, band_output_type = NULL, options = character()) {
+                               resample = "near", bands = NULL, band_output_type = NULL, options = character(), include_meta = TRUE) {
   
   if (length(target_res) > 0 ) target_res <- as.numeric(rep(target_res, length.out = 2L))
   if (is.null(target_crs)) target_crs <- "" 
   if (is.null(target_ext)) target_ext <-  numeric()
   if (is.null(target_dim)) target_dim <- integer() #info$dimension
   if (is.null(target_res)) target_res <- numeric() ## TODO
-  if (is.null(band_output_type)) band_output_type <- "UInt8"
+  if (is.null(band_output_type)) band_output_type <- "Byte"
   if (is.null(bands)) {
     nbands <- vapour_raster_info(dsn[1])$bands
     bands <- seq(min(c(nbands, 4L)))
   }
+  include_meta <- isTRUE(include_meta)
   bytes <- warp_general_cpp(dsn, target_crs, 
                             target_ext, 
                             target_dim, 
@@ -167,10 +181,38 @@ gdal_raster_image <- function(dsn, target_crs = NULL, target_dim = NULL, target_
                             bands = bands, 
                             resample = resample, 
                             silent = FALSE, band_output_type = band_output_type, 
-                            options = options, dsn_outname = "")
+                            options = options, dsn_outname = "", include_meta = include_meta, nara = FALSE)
   atts <- attributes(bytes)
   out <- list(as.vector(grDevices::as.raster(array(unlist(bytes, use.names = FALSE), c(length(bytes[[1]]), 1, max(c(3, length(bytes))))))))
   attributes(out) <- atts
+  out
+}
+
+
+#' @name gdal_raster_data
+#' @export
+gdal_raster_nara <- function(dsn, target_crs = NULL, target_dim = NULL, target_ext = NULL, target_res = NULL, 
+                              resample = "near", bands = NULL, band_output_type = NULL, options = character(), include_meta = TRUE) {
+  
+  if (length(target_res) > 0 ) target_res <- as.numeric(rep(target_res, length.out = 2L))
+  if (is.null(target_crs)) target_crs <- "" 
+  if (is.null(target_ext)) target_ext <-  numeric()
+  if (is.null(target_dim)) target_dim <- integer() #info$dimension
+  if (is.null(target_res)) target_res <- numeric() ## TODO
+  band_output_type <- "Byte"
+  if (is.null(bands)) {
+    nbands <- vapour_raster_info(dsn[1])$bands
+    bands <- seq(min(c(nbands, 4L)))
+  }
+  include_meta <- isTRUE(include_meta)
+  out <- warp_general_cpp(dsn, target_crs, 
+                            target_ext, 
+                            target_dim, 
+                            target_res, 
+                            bands = bands, 
+                            resample = resample, 
+                            silent = FALSE, band_output_type = band_output_type, 
+                            options = options, dsn_outname = "", include_meta = include_meta, nara = TRUE)
   out
 }
 

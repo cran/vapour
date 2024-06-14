@@ -1,3 +1,42 @@
+# vapour 0.10.0
+
+* Fixed leaks from valgrind, thanks CRAN and rhub. 
+
+* Cleaned up a number of address sanitize issues and segfaults, thanks to CRAN. 
+
+* Old warper code is removed, now uses 'gdal_raster_' from warpgeneral. 
+
+* Fixed putting bad options in (empty strings). 
+
+* Fixed type problem in internal get projection strings. 
+* Urgent release to fix segfault on CRAN, instances of int instead of IntegerVector for R devel. 
+
+* Fix incorrect format string for "-te". 
+
+* Use pkg-config on Windows when available, thanks Tomas Kalibera and CRAN. 
+
+* New function `gdal_raster_nara()` to return nativeRaster in a list understood by `ximage()`. 
+
+* New function `vector_vrt()` to generate VRT for SQL and/or reprojection. 
+
+* Fix cross-compilation for ARM on universe, thanks to Jeroen Ooms. 
+
+* New function `buildvrt()` as a special-case for -separate from gdalbuildvrt app. 
+
+* `vapour_vrt()` gains 'options' argument, so we can in particular do `options = c("-expand", "rgb", "-ot", "Byte")` to warp
+16-bit integer colour palettes from GTiff to PNG. :)
+ 
+* `gdal_raster_dsn()` can now write to non-GTiff/COG via `options = c("-of", DRIVER)`. 
+
+* New function `vapour_geolocation()` retrieves any existing geolocation information. 
+
+* `vapour_vrt()` called with geolocation arrays now scrubs the geotransform from the output (which ensures the
+warper uses the arrays without setting '-geoloc').
+
+* `vapour_create()` gets creation options, data type options, and driver options. 
+
+* Fixed failure to close file created by `vapour_create()` fixes #202. 
+
 # vapour 0.9.5
 
 * `vapour_vrt()` gains an 'overview' argument. Wish of https://github.com/hypertidy/vapour/issues/186
@@ -21,7 +60,7 @@ exposed for general use yet.
 
 * Fix for `vapour_vrt()` where 'geolocation' was not being included. Fixes #192. 
 
-* New capability to drop dataset and band metdata, used by functions `vapour_vrt()` and `vapour_warp_raster()` which gain a new argument 'nomd', which
+* New capability to drop dataset and band metadata, used by functions `vapour_vrt()` and `vapour_warp_raster()` which gain a new argument 'nomd', which
 is FALSE by default. If TRUE, the dataset and band metadata are removed from an open dataset before it is converted to VRT. 
 
 This particularly makes VRT DSN strings a lot smaller, for use by whatarelief and raadtools for example.  There should be no change to current default uses, the argument 'nomd' must be specified for the change. 

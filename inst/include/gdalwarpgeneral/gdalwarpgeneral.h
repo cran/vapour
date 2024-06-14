@@ -14,28 +14,20 @@ namespace gdalwarpgeneral{
 using namespace Rcpp;
 
 
-
-List gdal_suggest_warp(CharacterVector dsn, CharacterVector target_crs) {
-  GDALDataset* poSrcDS = (GDALDataset*) gdalraster::gdalH_open_dsn(dsn[0],  0);
+List gdal_suggest_warp(GDALDataset* poSrcDS, void *pfnTransformerArg) {
   double        adfGeoTransform[6];
-  poSrcDS->GetGeoTransform( adfGeoTransform );
+    poSrcDS->GetGeoTransform( adfGeoTransform );
  
-  int nXSize, nYSize;
-  double adfExtent[4]; 
-  GDALTransformerFunc pfnTransformer; 
-  pfnTransformer = GDALGenImgProjTransform;
+    int nXSize, nYSize;
+    double adfExtent[4]; 
+    
+    GDALTransformerFunc pfnTransformer; 
+    pfnTransformer = GDALGenImgProjTransform;
   
-  void *pfnTransformerArg = nullptr;
-  pfnTransformerArg =
-    GDALCreateGenImgProjTransformer( poSrcDS,
-                                     nullptr,
-                                     nullptr,
-                                     target_crs[0],
-                                               FALSE, 0.0, 1 );
+
   GDALSuggestedWarpOutput2(poSrcDS, pfnTransformer, pfnTransformerArg,
                            adfGeoTransform, &nXSize, &nYSize, adfExtent,
                            0); 
-  
   IntegerVector dimension(2);
   dimension[0] = nXSize;
   dimension[1] = nYSize;
@@ -46,11 +38,33 @@ List gdal_suggest_warp(CharacterVector dsn, CharacterVector target_crs) {
   extent[2] = adfExtent[1];
   extent[3] = adfExtent[3]; 
   
+  List out_i(2); 
+  out_i[0] = extent; 
+  out_i[1] = dimension; 
+  return out_i;
+}
+
+List gdal_suggest_warp(CharacterVector dsn, CharacterVector target_crs) {
+  List out(dsn.size()); 
+  IntegerVector sds0 = IntegerVector::create(0); 
+  for (int i = 0; i < dsn.size(); i++) {
+    GDALDataset* poSrcDS = (GDALDataset*) gdalraster::gdalH_open_dsn(dsn[0],  sds0);
+    //GDALTransformerFunc pfnTransformer; 
+    //pfnTransformer = GDALGenImgProjTransform;
   
-  List out(3); 
-  out[0] = extent; 
-  out[1] = dimension; 
-  out[2] = target_crs; 
+    void *pfnTransformerArg = nullptr;
+    pfnTransformerArg =
+     GDALCreateGenImgProjTransformer( poSrcDS,
+                                     nullptr,
+                                     nullptr,
+                                     target_crs[0],
+                                               FALSE, 0.0, 1 );
+    
+  out[i] = gdal_suggest_warp(poSrcDS, pfnTransformerArg);  
+  if (!(poSrcDS == nullptr)) {
+    GDALClose(poSrcDS); 
+  }
+  }
   return out; 
 }
 
@@ -72,22 +86,30 @@ inline List gdal_warp_general(CharacterVector dsn,
                               LogicalVector silent,
                               CharacterVector band_output_type, 
                               CharacterVector options, 
-                              CharacterVector dsn_outname) {
+                              CharacterVector dsn_outname, 
+                              LogicalVector include_meta, 
+                              LogicalVector nara) {
   
   
-  GDALDatasetH *poSrcDS;
-  poSrcDS = static_cast<GDALDatasetH *>(CPLMalloc(sizeof(GDALDatasetH) * static_cast<size_t>(dsn.size())));
+  ///GDALDatasetH *poSrcDS = nullptr;;
+//  poSrcDS = static_cast<GDALDatasetH *>(CPLRealloc(poSrcDS, sizeof(GDALDatasetH) * static_cast<size_t>(dsn.size())));
   
+  std::vector<GDALDatasetH> src_ds(dsn.size());
+  
+  IntegerVector sds0 = IntegerVector::create(0); 
   for (int i = 0; i < dsn.size(); i++) {
-    poSrcDS[i] = gdalraster::gdalH_open_dsn(dsn[i],   0); 
+    GDALDatasetH hDS = GDALOpen(dsn[i], GA_ReadOnly);
+    //src_ds[i] = gdalraster::gdalH_open_dsn(dsn[i],   sds0); 
     // unwind everything, and stop (why not unwind if all are null, message how many succeed)
-    if (poSrcDS[i] == nullptr) {
+    if (hDS == nullptr) {
       if (i > 0) {
-        for (int j = 0; j < i; j++) GDALClose(poSrcDS[j]);
+        for (int j = 0; j < i; j++) GDALClose(src_ds[j]);
       }
       Rprintf("input source not readable: %s\n", (char *)dsn[i]); 
-      CPLFree(poSrcDS);
+     // CPLFree(poSrcDS);
       Rcpp::stop(""); 
+    } else {
+      src_ds[i] = hDS; 
     }
   }
   
@@ -102,32 +124,19 @@ inline List gdal_warp_general(CharacterVector dsn,
     papszArg = CSLAddString(papszArg, "MEM");
     
   } else {
-    papszArg = CSLAddString(papszArg, "-of");
-    papszArg = CSLAddString(papszArg, "GTiff");
-    
+
     write_dsn = true; 
   }
   
   if (!target_crs[0].empty()) {
-    OGRSpatialReference *oTargetSRS = nullptr;
-    oTargetSRS = new OGRSpatialReference;
-    const char * strforuin = (const char *)target_crs[0];
-    OGRErr target_chk =  oTargetSRS->SetFromUserInput(strforuin);
+    OGRSpatialReference oTargetSRS;
+    //const char * strforuin = (const char *)target_crs[0];
+    OGRErr target_chk =  oTargetSRS.SetFromUserInput((const char*)target_crs[0]);
     if (target_chk != OGRERR_NONE) Rcpp::stop("cannot initialize target projection");
-   const char *st = NULL;
-    st = ((GDALDataset *)poSrcDS[0])->GetProjectionRef(); 
-
+  
     papszArg = CSLAddString(papszArg, "-t_srs");
     papszArg = CSLAddString(papszArg, target_crs[0]);
     
-    if( *st != '\0') {
-        // we also should be checking if no geolocation arrays and no gcps
-        Rcpp::warning("no source crs, target crs is ignored\n");
-      } 
-
-        
-      
-
   }
   
   if (target_extent.size() > 0) {
@@ -137,10 +146,10 @@ inline List gdal_warp_general(CharacterVector dsn,
     double dfMaxY = target_extent[3];
     
     papszArg = CSLAddString(papszArg, "-te");
-    papszArg = CSLAddString(papszArg, CPLSPrintf("%.18g,", dfMinX));
-    papszArg = CSLAddString(papszArg, CPLSPrintf("%.18g,", dfMinY));
-    papszArg = CSLAddString(papszArg, CPLSPrintf("%.18g,", dfMaxX));
-    papszArg = CSLAddString(papszArg, CPLSPrintf("%.18g,", dfMaxY));
+    papszArg = CSLAddString(papszArg, CPLSPrintf("%.18g", dfMinX));
+    papszArg = CSLAddString(papszArg, CPLSPrintf("%.18g", dfMinY));
+    papszArg = CSLAddString(papszArg, CPLSPrintf("%.18g", dfMaxX));
+    papszArg = CSLAddString(papszArg, CPLSPrintf("%.18g", dfMaxY));
   }
  
   if (target_dim.size() > 0) {
@@ -166,26 +175,30 @@ inline List gdal_warp_general(CharacterVector dsn,
     papszArg = CSLAddString(papszArg, resample[0]);
   }
   for (int gwopt = 0; gwopt < options.length(); gwopt++) {
-    papszArg = CSLAddString(papszArg, options[gwopt]);
+    if (!options[gwopt].empty()) {
+     papszArg = CSLAddString(papszArg, options[gwopt]);
+    }
   }
   
-
-  auto psOptions = GDALWarpAppOptionsNew(papszArg, nullptr);
+        
+  GDALWarpAppOptions* psOptions = GDALWarpAppOptionsNew(papszArg, nullptr);
+  
   CSLDestroy(papszArg);
+  
   GDALWarpAppOptionsSetProgress(psOptions, NULL, NULL );
 
-
     GDALDatasetH hRet = GDALWarp(dsn_outname[0], nullptr,
-                                  static_cast<int>(dsn.size()), poSrcDS,
+                                  static_cast<int>(dsn.size()), src_ds.data(),
                                   psOptions, nullptr);
   
   GDALWarpAppOptionsFree(psOptions);
+  
+  
 
-  CPLAssert( hRet != NULL );
   for (int si = 0; si < dsn.size(); si++) {
-    GDALClose( (GDALDataset *)poSrcDS[si] );
+    GDALClose( src_ds[si] );
   }
-  CPLFree(poSrcDS);
+ // CPLFree(poSrcDS);
   
   if (hRet == nullptr) {
     Rcpp::stop("data source could not be processed with GDALWarp api");
@@ -230,12 +243,12 @@ inline List gdal_warp_general(CharacterVector dsn,
                                                 bands_to_read,
                                                 band_output_type,
                                                 resample,
-                                                unscale);
+                                                unscale, nara);
   }
   
   
   
-  
+  if (include_meta[0]) {
   // shove the grid details on as attributes
   // get the extent ...
   R_xlen_t dimx =  ((GDALDataset*)hRet)->GetRasterXSize(); 
@@ -255,7 +268,7 @@ inline List gdal_warp_general(CharacterVector dsn,
   outlist.attr("dimension") = NumericVector::create(dimx, dimy);
   outlist.attr("extent") = NumericVector::create(xmin, xmax, ymin, ymax);
   outlist.attr("projection") = CharacterVector::create(proj);
-  
+  }  
   GDALClose( hRet );
   return outlist;
 }

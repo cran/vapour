@@ -6,6 +6,13 @@
 #include "vrtdataset.h"
 #include <ogr_spatialref.h>
 
+#include <Rinternals.h>
+
+
+#define R_RGB(r,g,b)	  ((r)|((g)<<8)|((b)<<16)|0xFF000000)
+#define R_RGBA(r,g,b,a)	((r)|((g)<<8)|((b)<<16)|((a)<<24))
+
+
 namespace gdalraster {
 using namespace Rcpp;
 
@@ -21,6 +28,63 @@ using namespace Rcpp;
 //   gdalmin:::open_gdal(c(file, topos))
 //
 
+inline SEXP C_native_rgb(SEXP b0, SEXP b1, SEXP b2, SEXP dm) {
+  SEXP res_ = PROTECT(Rf_allocVector(INTSXP, Rf_length(b0)));
+  for (int i = 0; i < Rf_length(b0); i++) {
+    INTEGER(res_)[i] = (int)R_RGB(RAW(b0)[i], RAW(b1)[i], RAW(b2)[i]);
+  }
+  SEXP dim;
+  dim = Rf_allocVector(INTSXP, 2);
+  INTEGER(dim)[0] = INTEGER(dm)[1];
+  INTEGER(dim)[1] = INTEGER(dm)[0];
+  Rf_setAttrib(res_, R_DimSymbol, dim);
+  Rf_setAttrib(res_, R_ClassSymbol, Rf_mkString("nativeRaster"));
+  {
+    SEXP chsym = Rf_install("channels");
+    Rf_setAttrib(res_, chsym, Rf_ScalarInteger(3));
+  }
+  UNPROTECT(1);
+  return res_;
+}
+
+
+inline SEXP C_native_rgba(SEXP b0, SEXP b1, SEXP b2, SEXP b3, SEXP dm) {
+  SEXP res_ = PROTECT(Rf_allocVector(INTSXP, Rf_length(b0)));
+  for (int i = 0; i < Rf_length(b0); i++) {
+    INTEGER(res_)[i] = (int)R_RGBA(RAW(b0)[i], RAW(b1)[i], RAW(b2)[i], RAW(b3)[i]);
+  }
+  SEXP dim;
+  dim = Rf_allocVector(INTSXP, 2);
+  INTEGER(dim)[0] = INTEGER(dm)[1];
+  INTEGER(dim)[1] = INTEGER(dm)[0];
+  Rf_setAttrib(res_, R_DimSymbol, dim);
+  Rf_setAttrib(res_, R_ClassSymbol, Rf_mkString("nativeRaster"));
+  {
+    SEXP chsym = Rf_install("channels");
+    Rf_setAttrib(res_, chsym, Rf_ScalarInteger(4));
+  }
+  UNPROTECT(1);
+  return res_;
+}
+
+
+inline List replace_nativeRaster(List inputlist, R_xlen_t dimx, R_xlen_t dimy) {
+  List outlist_nara = List();
+  
+  // GREY
+  if (inputlist.size() == 1) {
+    outlist_nara.push_back(C_native_rgb(inputlist[0], inputlist[0], inputlist[0], IntegerVector::create(dimx, dimy)));
+  }
+  // RGB
+  if (inputlist.size() == 3) {
+    outlist_nara.push_back(C_native_rgb(inputlist[0], inputlist[1], inputlist[2], IntegerVector::create(dimx, dimy)));
+  }
+  // RGBA (we ignore bands above 4)
+  if (inputlist.size() >= 4) {
+    outlist_nara.push_back(C_native_rgba(inputlist[0], inputlist[1], inputlist[2], inputlist[3], IntegerVector::create(dimx, dimy)));
+  }
+  return outlist_nara; 
+}
 
 // does it have subdatasets?
 inline bool gdal_has_subdataset(GDALDataset *poDataset) {
@@ -51,6 +115,7 @@ inline CharacterVector gdal_subdataset_1(GDALDataset *poDataset, int i_sds) {
   // owned by the object
   CharacterVector ret(1);
   
+  // owned by the dataset
   char **SDS2 = poDataset->GetMetadata("SUBDATASETS");
   while (SDS2 && SDS2[sdi] != NULL) {
 
@@ -120,7 +185,8 @@ inline GDALDatasetH gdalH_open_avrt(const char* dsn,
                                     NumericVector extent, 
                                     CharacterVector projection, 
                                     IntegerVector sds, IntegerVector bands, CharacterVector geolocation, 
-                                    IntegerVector overview) {
+                                    IntegerVector overview, 
+                                    CharacterVector options) {
   
   CPLStringList translate_argv;
   translate_argv.AddString("-of");
@@ -139,7 +205,7 @@ inline GDALDatasetH gdalH_open_avrt(const char* dsn,
   if (!projection[0].empty()) {
     // have to validate this
     OGRSpatialReference *srs = new OGRSpatialReference;
-    if (srs->SetFromUserInput(projection[0]) != OGRERR_NONE) {
+    if (srs->SetFromUserInput((const char*)projection[0]) != OGRERR_NONE) {
       Rprintf("cannot set projection (CRS) from input 'projection' argument, ignoring: '%s'\n", (const char*)projection[0]);
     } else {
       translate_argv.AddString("-a_srs");
@@ -154,7 +220,7 @@ inline GDALDatasetH gdalH_open_avrt(const char* dsn,
   if (geolocation.size() == 2) {
     OGRSpatialReference  *geolsrs = new OGRSpatialReference; 
     char *pszGeoSrsWKT = nullptr;
-    geolsrs->SetFromUserInput("OGC:CRS84");
+    geolsrs->SetFromUserInput("EPSG:4326");
     geolsrs->exportToWkt(&pszGeoSrsWKT);
     
     oDS->SetMetadataItem( "SRS", pszGeoSrsWKT, "GEOLOCATION" ); 
@@ -185,7 +251,9 @@ inline GDALDatasetH gdalH_open_avrt(const char* dsn,
     }
   }
 
-  
+  for (int iopt = 0; iopt < options.size(); iopt++) {
+    translate_argv.AddString(options[iopt]);    
+  }
   GDALTranslateOptions* psTransOptions = GDALTranslateOptionsNew(translate_argv.List(), nullptr);
 
   GDALDatasetH a_DS = GDALTranslate("", oDS, psTransOptions, nullptr);
@@ -204,12 +272,12 @@ inline GDALDatasetH* gdalH_open_multiple(CharacterVector dsn, IntegerVector sds)
   return poHDS;
 }
 inline GDALDatasetH* gdalH_open_avrt_multiple(CharacterVector dsn, NumericVector extent, 
-                                              CharacterVector projection, IntegerVector sds, IntegerVector bands) {
+                                              CharacterVector projection, IntegerVector sds, IntegerVector bands, CharacterVector options) {
   
   GDALDatasetH* poHDS;
   // whoever calls this will have to CPLFree() this
   poHDS = static_cast<GDALDatasetH *>(CPLMalloc(sizeof(GDALDatasetH) * static_cast<size_t>(dsn.size())));
-  for (int i = 0; i < dsn.size(); i++) poHDS[i] = gdalH_open_avrt(dsn[i],  extent, projection, sds, bands, "", -1);
+  for (int i = 0; i < dsn.size(); i++) poHDS[i] = gdalH_open_avrt(dsn[i],  extent, projection, sds, bands, "", -1, options);
   return poHDS;
 }
 // convert an opened GDALDataset to chunk-of-text VRT, if it is VRT you get it direct
@@ -245,12 +313,13 @@ inline const char* gdal_vrt_text(GDALDataset* poSrcDS, LogicalVector nomd) {
 inline CharacterVector gdal_dsn_vrt(CharacterVector dsn, NumericVector extent, CharacterVector projection, 
                                     IntegerVector sds, IntegerVector bands, 
                                     CharacterVector geolocation, LogicalVector nomd, 
-                                    IntegerVector overview) {
+                                    IntegerVector overview, CharacterVector options) {
+  
   CharacterVector out(dsn.size());
   GDALDatasetH DS;
   for (int i = 0; i < out.size(); i++) {
-    if (extent.size() == 4 || (!projection[0].empty()) || bands[0] > 0 || (!geolocation[0].empty() ) || sds[0] > 1 || overview[0] > -1) {
-      DS = gdalH_open_avrt(dsn[i], extent, projection, sds, bands, geolocation, overview);
+    if (extent.size() == 4 || (!projection[0].empty()) || bands[0] > 0 || (!geolocation[0].empty() ) || sds[0] > 1 || overview[0] > -1 || options.size() > 0) {
+      DS = gdalH_open_avrt(dsn[i], extent, projection, sds, bands, geolocation, overview, options);
     } else {
       DS = gdalH_open_dsn(dsn[i], sds);
     }
@@ -262,6 +331,7 @@ inline CharacterVector gdal_dsn_vrt(CharacterVector dsn, NumericVector extent, C
       GDALClose(DS);
     }
   }
+  
   return out;
 }
 
@@ -331,13 +401,10 @@ inline List gdal_raster_info(CharacterVector dsn, LogicalVector min_max)
     }
     int nXSize = GDALGetRasterXSize(hDataset);
     int nYSize = GDALGetRasterYSize(hDataset);
-    
-    
+
     double        adfGeoTransform[6];
-    
     //poDataset->GetGeoTransform( adfGeoTransform );
     GDALGetGeoTransform(hDataset, adfGeoTransform );
-    
     
     // bail out NOW (we have no SDS and/or no rasters)
     // #f <- system.file("h5ex_t_enum.h5", package = "h5")
@@ -348,32 +415,25 @@ inline List gdal_raster_info(CharacterVector dsn, LogicalVector min_max)
     Rcpp::DoubleVector trans(6);
     for (int ii = 0; ii < 6; ii++) trans[ii] = adfGeoTransform[ii];
     
-    char **pfilelist = GDALGetFileList(hDataset);
-    int fdi = 0;
-    while (pfilelist && pfilelist[fdi] != NULL) {
-      fdi++; // count
-    }
-    int ilist = fdi;
-    if (ilist < 1) {
-      ilist = 1; 
-    }
-    CharacterVector FileList(ilist);
-    // might be no files, because image server
-    if (pfilelist == nullptr) {
-      FileList[0] = NA_STRING;
-    } else {
-      for (int ifile = 0; ifile < fdi; ifile++) {
-        FileList[ifile] = pfilelist[ifile]; 
+    
+    
+    
+    char **filelist = GDALGetFileList(hDataset);
+    //std::vector <std::string> files;
+    CharacterVector files(0); 
+    if (filelist != NULL) {
+      for (size_t i=0; filelist[i] != NULL; i++) {
+        files.push_back(filelist[i]);
       }
     }
-    CSLDestroy(pfilelist);
+    CSLDestroy( filelist );
+    
     GDALRasterBandH  hBand;
     int             nBlockXSize, nBlockYSize;
-    //int             bGotMin, bGotMax;
     double          adfMinMax[2];
     
     hBand = GDALGetRasterBand(hDataset, 1);
-    // if we don't bail out above with no rasters things go bad here
+
     GDALGetBlockSize(hBand, &nBlockXSize, &nBlockYSize);
     if (min_max[0]) {
       GDALComputeRasterMinMax(hBand, TRUE, adfMinMax);
@@ -427,6 +487,7 @@ inline List gdal_raster_info(CharacterVector dsn, LogicalVector min_max)
 #else
     oSRS->importFromWkt( (const char**) cwkt);
 #endif
+    CSLDestroy(cwkt); 
     oSRS->exportToProj4(&stri);
     out[6] =  Rcpp::CharacterVector::create(stri); //Rcpp::CharacterVector::create(stri);
     names[6] = "projstring";
@@ -460,7 +521,7 @@ inline List gdal_raster_info(CharacterVector dsn, LogicalVector min_max)
     out[8] = oviews;
     names[8] = "overviews";
     
-    out[9] = FileList;
+    out[9] = files; 
     names[9] = "filelist";
     
     
@@ -566,7 +627,8 @@ inline List gdal_read_band_values(GDALDataset *hRet,
                                   std::vector<int> bands_to_read, 
                                   CharacterVector band_output_type, 
                                   CharacterVector resample,
-                                  LogicalVector unscale) 
+                                  LogicalVector unscale, 
+                                  LogicalVector nara) 
 {
   int Xoffset = window[0];
   int Yoffset = window[1];
@@ -743,7 +805,10 @@ inline List gdal_read_band_values(GDALDataset *hRet,
     GDALClose(hRet); 
     Rcpp::stop("band type not supported (is it Complex? report at hypertidy/vapour/issues)");
   }
-  
+
+  if (nara[0] && band_output_type[0] == "Byte") {
+    return replace_nativeRaster(outlist, (R_xlen_t) outXSize, (R_xlen_t) outYSize); 
+  } 
   return outlist; 
 }
 
@@ -1148,7 +1213,8 @@ inline List gdal_raster_io(CharacterVector dsn,
                            IntegerVector band,
                            CharacterVector resample,
                            CharacterVector band_output_type, 
-                           LogicalVector unscale)
+                           LogicalVector unscale, 
+                           LogicalVector nara)
 {
   
   GDALDataset  *poDataset;
@@ -1167,7 +1233,7 @@ inline List gdal_raster_io(CharacterVector dsn,
   } else {
     for (int i = 0; i < band.size(); i++) bands_to_read[static_cast<size_t>(i)] = band[i];
   }
-  List out = gdal_read_band_values(poDataset, window, bands_to_read, band_output_type, resample, unscale);
+  List out = gdal_read_band_values(poDataset, window, bands_to_read, band_output_type, resample, unscale, nara);
   // close up
   GDALClose(poDataset );
   return out;
@@ -1182,6 +1248,7 @@ inline LogicalVector gdal_has_geolocation(CharacterVector dsn, IntegerVector sds
   poDataset = (GDALDataset*)gdalH_open_dsn(dsn[0], sds);
   
   bool has_geol = false;
+  // owned by the dataset
   char **papszGeolocationInfo = poDataset->GetMetadata("GEOLOCATION");
   if( papszGeolocationInfo != nullptr ) {
     has_geol = true;
@@ -1192,6 +1259,42 @@ inline LogicalVector gdal_has_geolocation(CharacterVector dsn, IntegerVector sds
   return out;
 }
 
+inline List gdal_list_geolocation(CharacterVector dsn, IntegerVector sds) {
+
+  List out(1);
+  
+  if (!gdal_has_geolocation(dsn, sds)[0]) {
+    return out;     
+  }
+  GDALDataset* poDataset;
+  poDataset = (GDALDataset*)gdalH_open_dsn(dsn[0], sds);
+  
+  // owned by the dataset
+  char  **papszGeolocationInfo = poDataset->GetMetadata("GEOLOCATION");
+
+  if( papszGeolocationInfo == nullptr ) {
+      GDALClose(poDataset);
+    return out; 
+  }
+  CharacterVector ret(11);
+
+  ret[0] = CPLStrdup( CSLFetchNameValue( papszGeolocationInfo, "X_DATASET" ) );  
+  ret[1] = CPLStrdup( CSLFetchNameValue( papszGeolocationInfo, "Y_DATASET" ) );
+  ret[2] = CPLStrdup( CSLFetchNameValue( papszGeolocationInfo, "X_BAND" ) );  
+  ret[3] = CPLStrdup( CSLFetchNameValue( papszGeolocationInfo, "Y_BAND" ) );
+  ret[4] = CPLStrdup( CSLFetchNameValue( papszGeolocationInfo, "Z_DATASET" ) );
+  ret[5] = CPLStrdup( CSLFetchNameValue( papszGeolocationInfo, "Z_BAND" ) );  
+  
+  ret[6] = CPLStrdup( CSLFetchNameValue( papszGeolocationInfo, "SRS" ) );  
+  ret[7] = CPLStrdup( CSLFetchNameValue( papszGeolocationInfo, "PIXEL_OFFSET" ) );
+  ret[8] = CPLStrdup( CSLFetchNameValue( papszGeolocationInfo, "LINE_OFFSET" ) );  
+  ret[9] = CPLStrdup( CSLFetchNameValue( papszGeolocationInfo, "LINE_STEP" ) );
+  ret[10] = CPLStrdup( CSLFetchNameValue( papszGeolocationInfo, "GEOREFERENCING_CONVENTION" ) );
+
+  out[0] = ret; 
+  
+  return out;
+}
 
 
 // -------------------------------------------------------------------

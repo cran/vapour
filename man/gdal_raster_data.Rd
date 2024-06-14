@@ -4,6 +4,7 @@
 \alias{gdal_raster_data}
 \alias{gdal_raster_dsn}
 \alias{gdal_raster_image}
+\alias{gdal_raster_nara}
 \title{General raster read and convert}
 \usage{
 gdal_raster_data(
@@ -15,7 +16,8 @@ gdal_raster_data(
   resample = "near",
   bands = 1L,
   band_output_type = NULL,
-  options = character()
+  options = character(),
+  include_meta = TRUE
 )
 
 gdal_raster_dsn(
@@ -28,7 +30,8 @@ gdal_raster_dsn(
   bands = NULL,
   band_output_type = NULL,
   options = character(),
-  out_dsn = tempfile(fileext = ".tif")
+  out_dsn = tempfile(fileext = ".tif"),
+  include_meta = TRUE
 )
 
 gdal_raster_image(
@@ -40,7 +43,21 @@ gdal_raster_image(
   resample = "near",
   bands = NULL,
   band_output_type = NULL,
-  options = character()
+  options = character(),
+  include_meta = TRUE
+)
+
+gdal_raster_nara(
+  dsn,
+  target_crs = NULL,
+  target_dim = NULL,
+  target_ext = NULL,
+  target_res = NULL,
+  resample = "near",
+  bands = NULL,
+  band_output_type = NULL,
+  options = character(),
+  include_meta = TRUE
 )
 }
 \arguments{
@@ -62,7 +79,9 @@ gdal_raster_image(
 
 \item{options}{general options passed to gdal warper}
 
-\item{out_dsn}{use with \link{gdal_raster_dsn} optionally set the output file name (or one will be generated)}
+\item{include_meta}{metadata is attached, turn off by setting this to \code{FALSE}}
+
+\item{out_dsn}{file name for output "_dsn"}
 }
 \value{
 pixel values in a list vector per band, or a list of file paths
@@ -76,7 +95,6 @@ tool, a convenience third function 'gdal_raster_image()' works especially for im
 }
 \examples{
 dsn <- system.file("extdata/sst.tif", package = "vapour")
-par(mfrow = c(2, 2))
 ## do nothing, get native
 X <- gdal_raster_data(dsn)
 
@@ -85,10 +103,17 @@ X <- gdal_raster_data(dsn)
 X1 <- gdal_raster_data(dsn,  target_res = 1)
 
 ## add a cutline, and cut to it using gdal warp args
-cutline <- system.file("extdata/cutline_sst.gpkg", package = "vapour")
-X1c <- gdal_raster_data(dsn,  target_res = .1, options = c("-cutline",cutline, "-crop_to_cutline" ))
 
-## warp whole grid to give res
+if (interactive()) {
+ cutline <- tempfile(fileext = ".csv")
+ wkt <- "POLYGON ((142 -41, 149 -41, 146 -58, 142 -41))"
+ write.csv(data.frame(id = 1, WKT = wkt), cutline, row.names = FALSE)
+ X1c <- gdal_raster_data(dsn,  target_res = .5, 
+     options = c("-cutline",cutline, "-crop_to_cutline"))
+ file.remove(cutline)
+}
+
+## warp whole grid to given res
 X2 <- gdal_raster_data(dsn,  target_res = 25000, target_crs = "EPSG:32755")
 
 ## specify exactly (as per vapour originally)

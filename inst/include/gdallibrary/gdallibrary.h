@@ -5,6 +5,7 @@
 #include "gdal_priv.h"
 #include "CollectorList.h"
 #include "gdalraster/gdalraster.h"
+#include "ogr_srs_api.h"
 
 namespace gdallibrary {
 using namespace Rcpp;
@@ -89,13 +90,29 @@ inline R_xlen_t force_layer_feature_count(OGRLayer *poLayer) {
   if (out == -1) {
     out = 0;
     poLayer->ResetReading();
-    while(poLayer->GetNextFeature() != NULL) {
-      out++;
+    OGRFeature *poFeature;  
+    while( (poFeature = poLayer->GetNextFeature()) != NULL )
+    {
+      out++; 
+      OGRFeature::DestroyFeature( poFeature );
     }
     poLayer->ResetReading();
   }
   return out;
 }
+inline IntegerVector proj_version()
+{
+  Rcpp::IntegerVector out(3);
+
+   
+  int num1; int num2; int num3; 
+  OSRGetPROJVersion(&num1, &num2, &num3); 
+  out[0] = num1; 
+  out[1] = num2; 
+  out[2] = num3; 
+  return out;
+}
+
 inline CharacterVector gdal_version()
 {
   Rcpp::CharacterVector out(1);
@@ -112,38 +129,37 @@ inline OGRLayer *gdal_layer(GDALDataset *poDS, IntegerVector layer, CharacterVec
   
   bool use_extent_filter = false;
   if (ex.length() == 4) {
-        if (ex[1] <= ex[0] || ex[3] <= ex[2]) {
-          if (ex[1] <= ex[0]) {
-            Rcpp::warning("extent filter invalid (xmax <= xmin), ignoring");
-          }
-          if (ex[3] <= ex[2]) {
-            Rcpp::warning("extent filter invalid (ymax <= ymin), ignoring");
-          }
-        } else {    
-          use_extent_filter = true;
-          ring.addPoint(ex[0], ex[2]); //xmin, ymin
-          ring.addPoint(ex[0], ex[3]); //xmin, ymax
-          ring.addPoint(ex[1], ex[3]); //xmax, ymax
-          ring.addPoint(ex[1], ex[2]); //xmax, ymin
-          ring.closeRings();
-          poly.addRing(&ring);
-        }
+    if (ex[1] <= ex[0] || ex[3] <= ex[2]) {
+      if (ex[1] <= ex[0]) {
+        Rcpp::warning("extent filter invalid (xmax <= xmin), ignoring");
+      }
+      if (ex[3] <= ex[2]) {
+        Rcpp::warning("extent filter invalid (ymax <= ymin), ignoring");
+      }
+    } else {    
+      use_extent_filter = true;
+      ring.addPoint(ex[0], ex[2]); //xmin, ymin
+      ring.addPoint(ex[0], ex[3]); //xmin, ymax
+      ring.addPoint(ex[1], ex[3]); //xmax, ymax
+      ring.addPoint(ex[1], ex[2]); //xmax, ymin
+      ring.closeRings();
+      poly.addRing(&ring);
+    }
   }
-        
   
   // Rcpp::Function vapour_getenv_sql_dialect("vapour_getenv_dialect"); 
   // const char *sql_dialect = (const char *) vapour_getenv_sql_dialect(); 
   // 
   Environment vapour = Environment::namespace_env("vapour");
- 
+  
   // Picking up  function from this package
   Function vapour_getenv_sql_dialect = vapour["vapour_getenv_sql_dialect"];
   //const char *sql_dialect = (const char *) vapour_getenv_sql_dialect();
   CharacterVector R_dialect = vapour_getenv_sql_dialect(); 
   const char *sql_dialect = (const char *)R_dialect[0]; 
- 
- 
- 
+  
+  
+  
   if (sql[0] != "") {
     if (use_extent_filter) {
       poLayer =  poDS->ExecuteSQL(sql[0],
@@ -166,6 +182,7 @@ inline OGRLayer *gdal_layer(GDALDataset *poDS, IntegerVector layer, CharacterVec
       //Rprintf("layer index: %i\n", layer[0]);
       Rcpp::stop("layer index exceeds layer count");
     }
+    
     poLayer =  poDS->GetLayer(layer[0]);
   }
   if (poLayer == NULL) {
@@ -231,7 +248,7 @@ inline Rcpp::List allocate_fields_list(OGRFeatureDefn *poFDefn, R_xlen_t n_featu
   Rcpp::CharacterVector names(n);
   for (int i = 0; i < poFDefn->GetFieldCount(); i++) {
     OGRFieldDefn *poFieldDefn = poFDefn->GetFieldDefn(i);
-
+    
     /// stolen directly from sf and adapted thanks Edzer Pebesma
     switch (poFieldDefn->GetType()) {
     case OFTWideString:
@@ -313,7 +330,7 @@ inline List gdal_read_fields(CharacterVector dsn,
   //double  nFeature = force_layer_feature_count(poLayer);
   // trying to fix SQL problem 2020-10-05
   R_xlen_t nFeature = (R_xlen_t)poLayer->GetFeatureCount();
-
+  
   
   //Rprintf("%i\n", nFeature);
   if (nFeature > MAX_INT) {
@@ -415,10 +432,10 @@ inline List gdal_read_fields(CharacterVector dsn,
 }
 
 
- inline NumericVector gdal_feature_count(CharacterVector dsn,
-                                       IntegerVector layer, CharacterVector sql, NumericVector ex) {
-  GDALDataset       *poDS;
-  poDS = (GDALDataset*) GDALOpenEx(dsn[0], GDAL_OF_VECTOR, NULL, NULL, NULL );
+inline NumericVector gdal_feature_count(CharacterVector dsn,
+                                        IntegerVector layer, CharacterVector sql, NumericVector ex) {
+  GDALDataset       *poDS = nullptr;
+  poDS = (GDALDataset*) GDALOpenEx(dsn[0], GDAL_OF_READONLY | GDAL_OF_VECTOR, NULL, NULL, NULL );
   if( poDS == NULL )
   {
     Rcpp::stop("Open failed.\n");
@@ -438,7 +455,7 @@ inline List gdal_read_fields(CharacterVector dsn,
   if (sql[0] != "") {
     poDS->ReleaseResultSet(poLayer);
   }
-  GDALClose( poDS );
+  GDALClose( (GDALDatasetH) poDS );
   
   NumericVector out(1);
   out[0] = static_cast<double>(nFeature);
@@ -449,7 +466,7 @@ inline CharacterVector gdal_driver(CharacterVector dsn)
 {
   
   GDALDataset       *poDS;
-  poDS = (GDALDataset*) GDALOpenEx(dsn[0], GA_ReadOnly, NULL, NULL, NULL );  // gdal_driver(<any-type>)
+  poDS = (GDALDataset*) GDALOpenEx(dsn[0], GDAL_OF_READONLY , NULL, NULL, NULL );  // gdal_driver(<any-type>)
   if( poDS == NULL )
   {
     Rcpp::stop("Open failed.\n");
@@ -534,7 +551,7 @@ inline List gdal_read_geometry(CharacterVector dsn,
   }
   
   
-  int warncount = 0;
+  //int warncount = 0;
   while( (poFeature = poLayer->GetNextFeature()) != NULL )
   {
     
@@ -543,7 +560,7 @@ inline List gdal_read_geometry(CharacterVector dsn,
       OGRGeometry *poGeometry;
       poGeometry = poFeature->GetGeometryRef();
       if (poGeometry == NULL) {
-        warncount++;
+        //warncount++;
         feature_xx.push_back(R_NilValue);
         //if (warncount == 1) Rcpp::warning("at least one geometry is NULL, perhaps the 'sql' argument excludes the native geometry?\n(use 'SELECT * FROM ..') ");
       } else {
@@ -654,28 +671,72 @@ inline List gdal_read_geometry(CharacterVector dsn,
   return(feature_xx.vector());
 }
 
-
-
-
 inline CharacterVector gdal_proj_to_wkt(CharacterVector proj_str) {
-  OGRSpatialReference *oSRS = nullptr;
-  oSRS = new OGRSpatialReference; 
-  char *pszWKT = NULL;
-  oSRS->SetFromUserInput(proj_str[0]);
-  oSRS->exportToWkt(&pszWKT);
-  CharacterVector out =  Rcpp::CharacterVector::create(pszWKT);
-  CPLFree(pszWKT);
-  if (oSRS != nullptr) delete oSRS; 
+   OGRSpatialReference oSRS;
+   char *pszWKT = nullptr;
+   
+   //const char*  crs_in[] = {CHAR(STRING_ELT(proj_str, 0))};
+   
+   oSRS.SetFromUserInput((const char*) proj_str[0]);
+#if GDAL_VERSION_MAJOR >= 3
+   const char *options[3] = { "MULTILINE=YES", "FORMAT=WKT2", NULL };
+   OGRErr err = oSRS.exportToWkt(&pszWKT, options);
+#else
+   OGRErr err = oSRS.exportToWkt(&pszWKT);
+#endif
+
+
+  CharacterVector out = Rcpp::CharacterVector::create("not a WKT string"); 
+  if (err) {
+     out =  Rcpp::CharacterVector::create(NA_STRING);
+   } else {
+     out =  Rcpp::CharacterVector::create(pszWKT);
+   }
+   if (pszWKT != nullptr) CPLFree(pszWKT);
+   
   return out;
 }
 
-inline LogicalVector gdal_crs_is_lonlat(CharacterVector proj_str) {
-  OGRSpatialReference oSRS;
+
+// R version
+// inline CharacterVector gdal_proj_to_wkt(SEXP proj_str) {
+//   OGRSpatialReference oSRS;
+//   char *pszWKT = nullptr;
+//   const char*  crs_in[] = {CHAR(STRING_ELT(proj_str, 0))};
+//   
+//   oSRS.SetFromUserInput(*crs_in);
+// #if GDAL_VERSION_MAJOR >= 3
+//   const char *options[3] = { "MULTILINE=YES", "FORMAT=WKT2", NULL };
+//   OGRErr err = oSRS.exportToWkt(&pszWKT, options);
+// #else
+//   OGRErr err = oSRS.exportToWkt(&pszWKT);
+// #endif
+//   
+//   //CharacterVector out; 
+//   SEXP out = PROTECT(Rf_allocVector(STRSXP, 1));
+// 
+//   if (err) {
+//     SET_STRING_ELT(out, 0, NA_STRING);
+//   } else {
+//     SET_STRING_ELT(out, 0, Rf_mkChar(pszWKT));
+//   }
+//   UNPROTECT(1); 
+//   return out;
+// }
+
+inline LogicalVector gdal_crs_is_lonlat(SEXP proj_str) {
+  const char*  crs_in[] = {CHAR(STRING_ELT(proj_str, 0))};
   
-  oSRS.SetFromUserInput(proj_str[0]);
-  LogicalVector out(1); 
-  out[0] = oSRS.IsGeographic() > 0; 
-  
+  OGRSpatialReference oSRS; 
+  oSRS.SetFromUserInput(*crs_in);
+  //LogicalVector out = LogicalVector::create(false); 
+  SEXP out = PROTECT(Rf_allocVector(LGLSXP, 1));
+  SET_LOGICAL_ELT(out, 0, false); 
+  if (oSRS.IsGeographic()) {
+    SET_LOGICAL_ELT(out, 0, true); 
+
+  }
+  UNPROTECT(1); 
   return out;
 }
 
@@ -684,23 +745,19 @@ inline List gdal_projection_info(CharacterVector dsn,
                                  IntegerVector layer,
                                  CharacterVector sql)
 {
-  GDALDataset       *poDS;
+  
+  GDALDataset     *poDS = nullptr;
   poDS = (GDALDataset*) GDALOpenEx(dsn[0], GDAL_OF_VECTOR, NULL, NULL, NULL );
-  if( poDS == NULL )
+  
+  if( poDS == nullptr )
   {
     Rcpp::stop("Open failed.\n");
   }
+  
   NumericVector zero(1);
   zero[0] = 0.0;
   OGRLayer *poLayer = gdal_layer(poDS, layer, sql, zero);
-  
   OGRSpatialReference *SRS =  poLayer->GetSpatialRef();
-  
-  
-  
-  
-  
-  
   
   //  char *proj;  // this gets cleaned up lower in the SRS==NULL else
   List info_out(6);
@@ -712,52 +769,51 @@ inline List gdal_projection_info(CharacterVector dsn,
   outnames[3] = "Wkt";
   outnames[4] = "EPSG";
   outnames[5] = "XML";
-  info_out.attr("names") = outnames;
   
-  if (SRS == NULL) {
+  info_out.attr("names") = outnames;
+  if (SRS == nullptr) {
     //Rcpp::warning("null");
     // do nothing, or warn
     // e.g. .shp with no .prj
-  } else {
-    // Rcpp::warning("not null");
-    // SRS is not NULL, so explore validation
-    //  OGRErr err = SRS->Validate();
-    char *proj4 = NULL;
+  }  else {
+    //   // Rcpp::warning("not null");
+    //   // SRS is not NULL, so explore validation
+    //   //  OGRErr err = SRS->Validate();
+    char *proj4 = nullptr;
     SRS->exportToProj4(&proj4);
-    outproj[0] = proj4;
-    info_out[0] = Rcpp::clone(outproj);
-    CPLFree(proj4);
-    
-    char *MI = NULL;
+    if (proj4 != nullptr) {
+      info_out[0] = CharacterVector::create(proj4); 
+      CPLFree(proj4);
+    }
+    char *MI = nullptr;
     SRS->exportToMICoordSys(&MI);
-    outproj[0] = MI;
-    info_out[1] = Rcpp::clone(outproj);
-    CPLFree(MI);
-    
-    char *PWKT = NULL;
-    SRS->exportToPrettyWkt(&PWKT, false);
-    outproj[0] = PWKT;
-    info_out[2] = Rcpp::clone(outproj);
-    CPLFree(PWKT);
-    
-    char *UWKT = NULL;
-    SRS->exportToWkt(&UWKT);
-    outproj[0] = UWKT;
-    info_out[3] = Rcpp::clone(outproj);
-    CPLFree(UWKT);
-    
+    if (MI != nullptr) {
+      info_out[1] = CharacterVector::create(MI); 
+      CPLFree(MI);
+    } 
+    char *pwkt = nullptr;
+    SRS->exportToPrettyWkt(&pwkt);
+    if (pwkt != nullptr) {
+      info_out[2] = CharacterVector::create(pwkt); 
+      CPLFree(pwkt);
+    } 
+    char *uwkt = nullptr;
+    SRS->exportToWkt(&uwkt);
+    if (uwkt != nullptr) {
+      info_out[3] = CharacterVector::create(uwkt); 
+      CPLFree(uwkt);
+    } 
     int epsg = SRS->GetEPSGGeogCS();
-    info_out[4] = epsg;
+    info_out[4] =  IntegerVector::create(epsg);  
     
-    char *XML = NULL;
-    SRS->exportToXML(&XML);
-    outproj[0] = XML;
-    info_out[5] = Rcpp::clone(outproj);
-    CPLFree(XML);
+    char *xml = nullptr;
+    SRS->exportToXML(&xml);
+    if (xml != nullptr) {
+      info_out[5] = CharacterVector::create(xml); 
+      CPLFree(xml);
+    }
   }
-  
-  
-  
+
   // clean up if SQL was used https://www.gdal.org/classGDALDataset.html#ab2c2b105b8f76a279e6a53b9b4a182e0
   if (sql[0] != "") {
     poDS->ReleaseResultSet(poLayer);

@@ -46,7 +46,8 @@ test_that("warper no transformation works", {
 
 test_that("warper no transformation and no dimension works", {
   expect_that(vapour_warp_raster(f, extent = c(145, 146, -50, -48)), is_a("list"))
-  expect_error(vapour_warp_raster(f, extent = c(145, 146, -50, -48), projection = "+proj=laea"), "'dimension' must be numeric")
+  expect_error(vapour_warp_raster(f, extent = c(145, 146, -50, -48), projection = "+proj=laea"), 
+               "could not be processed")
 
 })
 
@@ -71,7 +72,7 @@ test_that("warper gives the right number of values", {
   expect_length(vapour_warp_raster(f, bands = 1, extent = c(145, 146, -50, -48), dimension = c(2L, 2L))[[1L]], 4L)
   expect_length(vapour_warp_raster(f, bands = 1, extent = c(145, 146, -50, -48), dimension = c(2L, 12L))[[1L]], 24L)
   expect_length(vapour_warp_raster(f, bands = 1, extent = c(145, 146, -50, -48), dimension = c(1L, 1200L))[[1L]], 1200L)
-  expect_message(vapour_warp_raster(f, bands = 1, extent = c(145, 146, 90, -48), dimension = c(300L, 301L))[[1L]], "expert use")
+  expect_error(vapour_warp_raster(f, bands = 1, extent = c(145, 146, 90, -48), dimension = c(300L, 301L))[[1L]], "all 'target_ext' values must be xmin < xmax, ymin < ymax")
 
 })
 
@@ -88,19 +89,19 @@ expect_named(
 test_that("robust to bad inputs", {
   
  expect_output( expect_error(vapour_warp_raster(c(f, "afile"), extent = c(0, 1, 0, 1),
-                                   projection = "+proj=laea", source_projection = "+proj=longlat", dimension = c(10, 10))
+                                   projection = "+proj=laea", source_projection = "EPSG:4326", dimension = c(10, 10))
    )
  )
   expect_error(vapour_warp_raster(c(f, f), extent = c(0, 1, 0, 1),
-                     projection = "+proj=laea", source_wkt = "+proj=longlat", dimension = c(10, 10)), "'source_wkt' is defunct")
+                     projection = "+proj=laea", source_wkt = "EPSG:4326", dimension = c(10, 10)), "'source_wkt' is defunct")
 
   expect_named(vapour_warp_raster(c(f, f), extent = c(0, 1, 0, 1),
-                                  projection = "+proj=laea", source_projection = "+proj=longlat", dimension = c(10, 10)), "Band1")
+                                  projection = "+proj=laea", source_projection = "EPSG:4326", dimension = c(10, 10)), "Band1")
   
   expect_named(vapour_warp_raster(f, extent = c(0, 1, 0, 1),
                                   projection = "+proj=laea",  dimension = c(10, 10)))
 
   expect_error(vapour_warp_raster(f, extent = c(0, 1, 0, 1), band = 2,
-                                  projection = "+proj=laea", source_projection = "+proj=longlat", dimension = c(10, 10)), "band number is not available")
+                                  projection = "+proj=laea", source_projection = "EPSG:4326", dimension = c(10, 10)), "band number is not available")
 
 })

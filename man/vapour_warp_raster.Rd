@@ -22,7 +22,8 @@ vapour_warp_raster(
   open_options = "",
   options = "",
   nomd = FALSE,
-  overview = -1L
+  overview = -1L,
+  nara = FALSE
 )
 }
 \arguments{
@@ -61,6 +62,8 @@ vapour_warp_raster(
 \item{nomd}{if \code{TRUE} the Metadata tag is removed from the resulting VRT (it can be quite substantial)}
 
 \item{overview}{pick an integer overview from the source (0L is highest resolution, default -1L does nothing)}
+
+\item{nara}{if 'TRUE' return in nativeRaster format}
 }
 \value{
 list of vectors (only 1 for 'band') of numeric values, in raster order

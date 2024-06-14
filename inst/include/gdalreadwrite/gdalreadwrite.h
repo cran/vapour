@@ -12,80 +12,168 @@ namespace gdalreadwrite{
 
 using namespace Rcpp;
 
-inline CharacterVector gdal_create(CharacterVector filename, CharacterVector driver,
-                                   NumericVector extent, IntegerVector dimension,
-                                   CharacterVector projection,
-                                   IntegerVector n_bands) {
-  
-  // const char *pszFormat;
-  // pszFormat = (const char *)driver[0];
-  
-  OGRSpatialReference* oTargetSRS = nullptr;
-  oTargetSRS = new OGRSpatialReference;
-  OGRErr target_chk =  oTargetSRS->SetFromUserInput(projection[0]);
-  if (target_chk != OGRERR_NONE) {
-    if (oTargetSRS != nullptr) {
-      delete oTargetSRS;
-    }
-    Rcpp::stop("cannot initialize target projection");
+
+
+inline GDALDataType init_datatype(CharacterVector datatype) {
+  // Byte/Int8/Int16/UInt16/
+  //UInt32/Int32/UInt64/Int64/
+  // Float32/Float64/CInt16/CInt32/
+  // CFloat32/CFloat64
+  // Unknown
+  if (datatype[0] == "Byte") {
+    return GDT_Byte;
   }
   
-  char **papszOptions = NULL;
-  if (driver[0] == "GTiff") {
-    papszOptions = CSLSetNameValue( papszOptions, "SPARSE_OK", "YES" );
-    papszOptions = CSLSetNameValue( papszOptions, "TILED", "YES" );
-    papszOptions = CSLSetNameValue( papszOptions, "BLOCKXSIZE", "512" );
-    papszOptions = CSLSetNameValue( papszOptions, "BLOCKYSIZE", "512" );
-    papszOptions = CSLSetNameValue( papszOptions, "COMPRESS", "DEFLATE" );
+  if (datatype[0] == "Int16") {
+    return GDT_Int16;
   }
- 
- 
-    GDALDriver *poDriver;
-  poDriver = GetGDALDriverManager()->GetDriverByName(driver[0]);
-  if( poDriver == NULL ) {
-    return Rcpp::CharacterVector::create(NA_STRING); 
+  if (datatype[0] == "UInt16") {
+    return GDT_UInt16;
   }
-  char **papszMetadata;
-  papszMetadata = poDriver->GetMetadata();
-  if( CSLFetchBoolean( papszMetadata, GDAL_DCAP_CREATE, FALSE ) ) {
-    Rprintf( "Driver %s supports Create() method.\n", (const char *)driver[0]);
-  } else {
-    Rprintf( "Driver %s does not support Create() method.\n", (const char *)driver[0]);
-    return Rcpp::CharacterVector::create(NA_STRING); 
+  if (datatype[0] == "UInt32") {
+    return GDT_UInt32;
   }
-  GDALDataset *poDstDS;
-  poDstDS = poDriver->Create(filename[0], dimension[0], dimension[1], n_bands[0], GDT_Float32, papszOptions);
-  if (poDstDS == NULL) {
-    Rprintf( "Failed to Create %s. \n", (const char *)filename[0]);
-    
-    return Rcpp::CharacterVector::create(NA_STRING); 
+  if (datatype[0] == "Int32") {
+    return GDT_Int32;
   }
   
-  double adfGeoTransform[6] = { extent[0], (extent[1] - extent[0])/ dimension[0], 0, 
-                                extent[3], 0, (extent[2] - extent[3])/ dimension[1]};
-  poDstDS->SetGeoTransform( adfGeoTransform );
-  
-  
-  if (oTargetSRS != nullptr) {
-    delete oTargetSRS;
+  if (datatype[0] == "Float32") {
+    return GDT_Float32;
   }
-  return Rcpp::CharacterVector::create(filename[0]);
+  if (datatype[0] == "Float64") {
+    return GDT_Float64;
+  }
+  if (datatype[0] == "CInt16") {
+    return GDT_CInt16;
+  }
+  if (datatype[0] == "CInt32") {
+    return GDT_CInt32;
+  }
+  if (datatype[0] == "CFLoat32") {
+    return GDT_CFloat32;
+  }
+  if (datatype[0] == "CFloat64") {
+    return GDT_CFloat64;
+  }
+#if (GDAL_VERSION_MAJOR >= 3 && GDAL_VERSION_MINOR >= 7)
+  if (datatype[0] == "Int8") {
+    return GDT_Int8;
+  }
+#endif
+  
+#if (GDAL_VERSION_MAJOR >= 3 && GDAL_VERSION_MINOR >= 5)
+  
+  if (datatype[0] == "UInt64") {
+    return GDT_UInt64;
+  }
+  if (datatype[0] == "Int64") {
+    return GDT_Int64;
+  }
+#endif
+  
+  // Rcpp::stop("datatype not suppported %s\n", datatype[0]);
+  return GDT_Unknown;
 }
+
+
+
+inline CharacterVector gdal_create(CharacterVector filename, 
+                                   CharacterVector driver,
+                                   NumericVector extent, 
+                                   IntegerVector dimension,
+                                   CharacterVector projection,
+                                   IntegerVector n_bands, 
+                                   CharacterVector datatype,
+                                   List options_list_pairs) {
+  
+  
+  GDALDataType gdt_type = init_datatype(datatype); 
+  
+  OGRSpatialReference oSRS;
+  oSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+  
+  if (oSRS.SetFromUserInput(projection[0]) != OGRERR_NONE)
+  {
+    Rcpp::warning(
+      "Failed to process 'projection' definition");
+    
+  }
+  
+  char *pszWKT = nullptr;
+#if GDAL_VERSION_MAJOR >= 3
+  const char *optionsWKT[3] = { "MULTILINE=YES", "FORMAT=WKT2", NULL };
+  OGRErr err = oSRS.exportToWkt(&pszWKT, optionsWKT);
+#else
+  OGRErr err = oSRS.exportToWkt(&pszWKT);
+#endif
+  
+  
+  GDALDriverH hDriver;
+  hDriver = GDALGetDriverByName(driver[0]);
+  if( hDriver == nullptr ) {
+    //delete(poTargetSRS); 
+    Rcpp::stop("failed to get nominated 'driver'"); 
+  }
+  
+  
+  
+  
+  char **papszOptions = nullptr;
+  if (options_list_pairs.size() > 0) {
+    for (int i = 0; i < options_list_pairs.size(); i++) {
+      CharacterVector options2 = options_list_pairs[i]; 
+      if (options2.size() == 2) {
+        //Rprintf("options: %s %s\n", (char *)options2[0], (char *)options2[1]); 
+        papszOptions = CSLSetNameValue(papszOptions, (char *)options2[0], (char *)options2[1]);
+      }
+    }
+  }
+  
+  
+  
+  GDALDatasetH hDS = nullptr;
+  hDS = GDALCreate(hDriver, filename[0],
+                   dimension[0], dimension[1], n_bands[0], gdt_type,
+                   papszOptions);
+  
+  
+  if (hDS == nullptr) {
+    Rprintf( "Failed to create dataset\n");
+    if (pszWKT != nullptr)  CPLFree(pszWKT); 
+     CSLDestroy(papszOptions); 
+    
+    return Rcpp::CharacterVector::create(NA_STRING);
+  }
+  
+  double adfGeoTransform[6] = { extent[0], (extent[1] - extent[0])/ dimension[0], 0,
+                                extent[3], 0, (extent[2] - extent[3])/ dimension[1]};
+  GDALSetGeoTransform(hDS, adfGeoTransform );
+  GDALSetProjection(hDS, pszWKT); 
+  
+  if (pszWKT != nullptr) CPLFree(pszWKT); 
+  CSLDestroy(papszOptions); 
+  
+  
+  if( hDS != nullptr ) GDALClose( hDS );
+  return filename; 
+}
+
+
+
+
+
 inline CharacterVector gdal_create_copy(CharacterVector dsource, CharacterVector dtarget, CharacterVector driver) {
   
-  const char *pszFormat;
-  pszFormat = (const char *)driver[0];
   GDALDriver *poDriver;
   //char **papszMetadata;
-  poDriver = GetGDALDriverManager()->GetDriverByName(pszFormat);
-  
+  poDriver = GetGDALDriverManager()->GetDriverByName(driver[0]);
   
   GDALDataset *poSrcDS = (GDALDataset *) GDALOpen( dsource[0], GA_ReadOnly );
   if (poSrcDS == NULL ) stop("unable to open raster source for reading: %s", (char *)dsource[0]);
   
   // 
   GDALDataset *poDstDS;
-  char **papszOptions = NULL;
+  char **papszOptions = nullptr;
   papszOptions = CSLSetNameValue( papszOptions, "SPARSE_OK", "YES" );
   poDstDS = poDriver->CreateCopy( dtarget[0], poSrcDS, FALSE,
                                   papszOptions, NULL, NULL );
@@ -94,18 +182,20 @@ inline CharacterVector gdal_create_copy(CharacterVector dsource, CharacterVector
   if( poDstDS == NULL ) {
     GDALClose( (GDALDatasetH) poSrcDS );
     Rprintf("unable to open raster source for CreateCopy: %s", (char *)dtarget[0]);
+    CSLDestroy(papszOptions); 
     return CharacterVector::create("");
-  } else {
-    GDALClose( (GDALDatasetH) poDstDS );
-  }
-  GDALClose( (GDALDatasetH) poSrcDS );
+  } 
+  CSLDestroy(papszOptions); 
+  
+  GDALClose( (GDALDatasetH) poDstDS );
+  
   
   
   return dtarget;
 }
 inline List gdal_read_block(CharacterVector dsn, IntegerVector offset,
                             IntegerVector dimension, IntegerVector band,
-                            CharacterVector band_output_type, LogicalVector unscale) {
+                            CharacterVector band_output_type, LogicalVector unscale, LogicalVector nara) {
   IntegerVector window(6);
   window[0] = offset[0];
   window[1] = offset[1];
@@ -113,7 +203,7 @@ inline List gdal_read_block(CharacterVector dsn, IntegerVector offset,
   window[3] = dimension[1];
   window[4] = dimension[0];
   window[5] = dimension[1];
-  return   gdalraster::gdal_raster_io(dsn, window, band, "nearestneighbour", band_output_type, unscale);
+  return   gdalraster::gdal_raster_io(dsn, window, band, "nearestneighbour", band_output_type, unscale, nara);
 }
 
 inline LogicalVector gdal_write_block(CharacterVector dsn, NumericVector data,
