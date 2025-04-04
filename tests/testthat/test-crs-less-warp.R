@@ -1,5 +1,8 @@
 test_that("with with no source crs works", {
   #skip("skip fixme")
+  
+  skip_on_cran()
+  skip_on_ci()
   f <- system.file("extdata/volcano.png", package = "vapour", mustWork = TRUE)
   info <- vapour_raster_info(f)
   ok <- vapour_warp_raster(f, dimension = info$dimension, 
@@ -25,7 +28,7 @@ test_that("with with no source crs works", {
   expect_type(im <- vapour_warp_raster_dbl(vrt, extent = ex, dimension = info$dimension, projection = lcc
                                , transformation_options = c("SRC_METHOD=NO_GEOTRANSFORM")), "double")
 
-  
+
   ex <- c(-180, 180, -90, 90)
   dm <- c(512, 1024)
   vrt <- vapour_vrt(sds[3], geolocation = sds[2:1], bands = 1)

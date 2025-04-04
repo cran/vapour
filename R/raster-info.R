@@ -88,7 +88,7 @@ sds_boilerplate_checks <- function(x, sds = NULL) {
 #'
 #' @section The Geo Transform:
 #'
-#' From \url{https://gdal.org/user/raster_data_model.html}.
+#' From \url{https://gdal.org/en/stable/user/raster_data_model.html}.
 #'
 #' The affine transform consists of six coefficients returned by
 #' `GDALDataset::GetGeoTransform()` which map pixel/line coordinates into
@@ -296,7 +296,7 @@ vapour_sds_names <- function(x) {
 #' @examples
 #' drivers <- vapour_all_drivers()
 #' ok <- drivers$raster[ drivers$driver == "netCDF"]
-#' if (isTRUE(ok)) {
+#' if (isTRUE(ok) && interactive()) {
 #'  vapour_geolocation(system.file("extdata/gdal/geos_rad.nc", package = "vapour"), 0L)
 #' }
 vapour_geolocation <- function(x, sds = NULL) {

@@ -1,3 +1,7 @@
+# vapour 0.11.0
+
+* Removed bashisms, thanks CRAN. 
+
 # vapour 0.10.0
 
 * Fixed leaks from valgrind, thanks CRAN and rhub. 
