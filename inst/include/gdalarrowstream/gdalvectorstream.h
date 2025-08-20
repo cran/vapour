@@ -149,8 +149,6 @@ inline Rcpp::List ogr_layer_setup(Rcpp::CharacterVector datasource,
   OGRPolygon poly;
   OGRLinearRing ring;
 
-  // set spatial filter?
-  bool use_extent_filter = false;
   if (ex.length() == 4) {
         if (ex[1] <= ex[0] || ex[3] <= ex[2]) {
           if (ex[1] <= ex[0]) {
@@ -160,7 +158,6 @@ inline Rcpp::List ogr_layer_setup(Rcpp::CharacterVector datasource,
             Rcpp::warning("extent filter invalid (ymax <= ymin), ignoring");
           }
         } else {
-          use_extent_filter = true;
           ring.addPoint(ex[0], ex[2]); //xmin, ymin
           ring.addPoint(ex[0], ex[3]); //xmin, ymax
           ring.addPoint(ex[1], ex[3]); //xmax, ymax
@@ -236,21 +233,21 @@ inline Rcpp::List read_gdal_stream(
                                         drivers,
                                         extent,
                                         width);
-  OGRDataSource* poDS = (OGRDataSource*)(R_ExternalPtrAddr(prep[0]));
+  
   OGRLayer* poLayer = (OGRLayer*)R_ExternalPtrAddr(prep[1]);
   auto stream_out = reinterpret_cast<struct ArrowArrayStream*>(
     R_ExternalPtrAddr(stream_xptr));
 
   OGRSpatialReference* crs = poLayer->GetSpatialRef();
-  char* wkt_out;
+  
+  
   std::string wkt_str;
-  if (crs) {
+  if (crs != nullptr) {
+    char* wkt_out;
     crs->exportToWkt(&wkt_out);
     wkt_str = wkt_out;
-  } else {
-    wkt_str = "";
+    CPLFree(wkt_out);
   }
-  CPLFree(wkt_out);
 
   struct ArrowArrayStream stream_temp;
   if (!poLayer->GetArrowStream(&stream_temp, array_stream_options)) {
@@ -268,9 +265,7 @@ inline Rcpp::List read_gdal_stream(
     num_features = -1;
   }
 
-  if (! Rcpp::CharacterVector::is_na(query[0])) {
-		//poDS->ReleaseResultSet(poLayer);
-  }
+
 
   return Rcpp::List::create(wkt_str, Rcpp::NumericVector::create(num_features));
 }

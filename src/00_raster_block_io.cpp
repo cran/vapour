@@ -69,6 +69,7 @@ Rcpp::NumericVector vapour_read_raster_value_cpp(CharacterVector dsource,
   GDALRasterIOExtraArg psExtraArg;
   psExtraArg = gdalraster::init_resample_alg(resample); 
   CPLErr err; 
+  err = CE_None; 
   
   for (int i = 0; i < col.size(); i++) {
     
@@ -78,6 +79,9 @@ Rcpp::NumericVector vapour_read_raster_value_cpp(CharacterVector dsource,
     
   }
   GDALClose(ds); 
+ if (err != CE_None) {
+   Rcpp::stop("failed to read band values"); 
+ }
   return vals; 
 }
 
