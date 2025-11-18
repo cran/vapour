@@ -1,6 +1,6 @@
-e7d56bd0af23c909c95d75f474fdf75b *DESCRIPTION
+72fe48a3d8d212138390537d0c589bd0 *DESCRIPTION
 bc9ec11d91eeacd09a5b0ce8ddcab94e *NAMESPACE
-980b8e95a50db742cc7f1184ec1ab206 *NEWS.md
+de106aa30525f746c35ee01044f6b195 *NEWS.md
 673928acf652dcc8db0536126c312404 *R/00_read_block.R
 d15d49922114f36b923bb99934936035 *R/00_utils.R
 1f3ef5063c50bb5069143ff1addb0fef *R/00_warpgeneral.R
@@ -19,7 +19,7 @@ d033e98651efe12c8a898de11182efe0 *R/vapour_input_geometry.R
 a31043b5b1c3c8642d5556413bc00c98 *R/vapour_vrt.R
 085290679eb27576a6fea05ef8973a76 *R/vapour_vsi_list.R
 15b9e34554cec49d38bbf5ced2b67378 *R/zzz.R
-0b07f2e8913a32bfbee1e1eabcc75f65 *README.md
+54433df919cd7cddb1fbebfe65861185 *README.md
 fc2a186a882251a40b53a9d3f93e589a *build/vignette.rds
 e1cd2994af7041886c64cd5e658646df *cleanup
 7b0b92207586b78c1e846d00967e824a *configure
@@ -36,7 +36,7 @@ f98550ff1129d8c12f9a90528435b4cc *inst/benchmarks/limit_n.R
 7b57e3446916e8caf14f6ef579c787aa *inst/doc/feature-access.html
 cb12cdb0f49fc2f84d1abf763aec5e46 *inst/doc/vapour.R
 f7b68977d7bd0c8fc611b040031d4995 *inst/doc/vapour.Rmd
-fc32dec6800654c757e13bf8199d7c1d *inst/doc/vapour.html
+4730587b73e557551690443783e17457 *inst/doc/vapour.html
 d8059ea18bffa43ab4da476ccbf6175b *inst/docker/gdal-latest/Dockerfile
 3445cf5916f128eb7b9f6714cea7ba0b *inst/extdata/gcps/volcano_gcp.tif
 4054c9a0c2c0754eaddbf62da2b8088e *inst/extdata/gdal/bad_netcdf_geoloc_arrays.nc
@@ -64,10 +64,10 @@ ecccda134596aa67229f1695f444d1ef *inst/extdata/volcano_overview.tif
 9d727b3eb717aa6a2ba63204af72bbf8 *inst/extdata/vsi/point_shp.zip
 59435c93e84a315e44e1d32583848760 *inst/include/common/common_vapour.h
 6276b976b5227c71fd0f19753d678fcf *inst/include/gdalapplib/gdalapplib.h
-8b3ba8b610b50a8bf4bbf8d9903e71af *inst/include/gdalarrowstream/gdalvectorstream.h
+67a63dbdd9d2542870be159975dd9915 *inst/include/gdalarrowstream/gdalvectorstream.h
 cf5cec2e5c3d87407ee07bd658befd13 *inst/include/gdalgeometry/gdalgeometry.h
 dc5ec69c3b25f24e787241401cfb05e5 *inst/include/gdallibrary/CollectorList.h
-59e0fdfa4d978dc05d7b96e65fae62c1 *inst/include/gdallibrary/gdallibrary.h
+b30d70e9b2a8ab9c09574f8e03096540 *inst/include/gdallibrary/gdallibrary.h
 d14fa9b31a1b372a9ce2a7b5bdac6f78 *inst/include/gdalmiscutils/gdalmiscutils.h
 5f7c11447f5f0f884c13eb3c1cbbd46b *inst/include/gdalraster/gdalraster.h
 b09dffe4db75c1a750c6258c7a9dcfab *inst/include/gdalreadwrite/gdalreadwrite.h
@@ -82,7 +82,7 @@ b09dffe4db75c1a750c6258c7a9dcfab *inst/include/gdalreadwrite/gdalreadwrite.h
 1ec7254f1ea5162e090425e883d19a7d *inst/wms/elevation-tiles-prod.xml
 97e4882ca95973c789ff6f97ac7c3a61 *man/GDAL-library.Rd
 7cfe968f2db4ff57343fb5e2f1e66177 *man/buildvrt.Rd
-27b0c1998d44129003ff348297fb5192 *man/figures/README-lod-1.png
+ac153dcb1248cf2d7c1505ad9db58937 *man/figures/README-lod-1.png
 ba2f0a3268f9a55e870457f4a1acb744 *man/figures/README-topo-example-1.png
 9616794c5b5bbc8ac56fc13733942554 *man/figures/README-topo-example-2.png
 786f2088eaa7f1d7e60e3080a5260e7c *man/figures/logo.png
@@ -122,7 +122,7 @@ e1a40bf7087e6398254016c995197009 *src/00_config.cpp
 21edf5bfb1592b8cd7a6615efbef3882 *src/00_gdal.cpp
 811456d0ca479ba7f6be276442f5042c *src/00_geometry.cpp
 b5c35b66ea110f8d4e5897ec0e3d54a4 *src/00_raster.cpp
-4a504a1b25fae8cc1b79369776f8e02e *src/00_raster_block_io.cpp
+1d9390ea4aed322609c2840412732858 *src/00_raster_block_io.cpp
 8dcfcd946d38f03b8411b27d86c86fef *src/00_utils.cpp
 6b5c890579926c55cb9734c2f5f4b83b *src/00_vrt.cpp
 8b4d94bb76d1fc77ce23c4a9810b28f7 *src/Makevars.in
