@@ -1,6 +1,6 @@
-72fe48a3d8d212138390537d0c589bd0 *DESCRIPTION
+312e674c95ac9ac075b9af4e3287a2dd *DESCRIPTION
 bc9ec11d91eeacd09a5b0ce8ddcab94e *NAMESPACE
-de106aa30525f746c35ee01044f6b195 *NEWS.md
+570610457a7dc80dc1979e52a390a163 *NEWS.md
 673928acf652dcc8db0536126c312404 *R/00_read_block.R
 d15d49922114f36b923bb99934936035 *R/00_utils.R
 1f3ef5063c50bb5069143ff1addb0fef *R/00_warpgeneral.R
@@ -22,7 +22,7 @@ a31043b5b1c3c8642d5556413bc00c98 *R/vapour_vrt.R
 54433df919cd7cddb1fbebfe65861185 *README.md
 fc2a186a882251a40b53a9d3f93e589a *build/vignette.rds
 e1cd2994af7041886c64cd5e658646df *cleanup
-7b0b92207586b78c1e846d00967e824a *configure
+5da96c1baf2d76b7bea6cecf39d1ae42 *configure
 c4b060ddb974ff35ea72ae0d586769dd *configure.ac
 4549696370b4fa135381473e28acdeb3 *data/sst_c.rda
 f5e73922dacf10a71ce18dd74b0a6069 *data/tas_wkt.rda
@@ -36,7 +36,7 @@ f98550ff1129d8c12f9a90528435b4cc *inst/benchmarks/limit_n.R
 7b57e3446916e8caf14f6ef579c787aa *inst/doc/feature-access.html
 cb12cdb0f49fc2f84d1abf763aec5e46 *inst/doc/vapour.R
 f7b68977d7bd0c8fc611b040031d4995 *inst/doc/vapour.Rmd
-4730587b73e557551690443783e17457 *inst/doc/vapour.html
+5453d275ae1176d7521a508c46984af7 *inst/doc/vapour.html
 d8059ea18bffa43ab4da476ccbf6175b *inst/docker/gdal-latest/Dockerfile
 3445cf5916f128eb7b9f6714cea7ba0b *inst/extdata/gcps/volcano_gcp.tif
 4054c9a0c2c0754eaddbf62da2b8088e *inst/extdata/gdal/bad_netcdf_geoloc_arrays.nc
@@ -63,7 +63,7 @@ d83c9bd1d3d36213cb5f86cdca42d428 *inst/extdata/volcano.png
 ecccda134596aa67229f1695f444d1ef *inst/extdata/volcano_overview.tif
 9d727b3eb717aa6a2ba63204af72bbf8 *inst/extdata/vsi/point_shp.zip
 59435c93e84a315e44e1d32583848760 *inst/include/common/common_vapour.h
-6276b976b5227c71fd0f19753d678fcf *inst/include/gdalapplib/gdalapplib.h
+d2df8a9b9a89340360a39478e63e0a84 *inst/include/gdalapplib/gdalapplib.h
 67a63dbdd9d2542870be159975dd9915 *inst/include/gdalarrowstream/gdalvectorstream.h
 cf5cec2e5c3d87407ee07bd658befd13 *inst/include/gdalgeometry/gdalgeometry.h
 dc5ec69c3b25f24e787241401cfb05e5 *inst/include/gdallibrary/CollectorList.h
@@ -125,9 +125,8 @@ b5c35b66ea110f8d4e5897ec0e3d54a4 *src/00_raster.cpp
 1d9390ea4aed322609c2840412732858 *src/00_raster_block_io.cpp
 8dcfcd946d38f03b8411b27d86c86fef *src/00_utils.cpp
 6b5c890579926c55cb9734c2f5f4b83b *src/00_vrt.cpp
-8b4d94bb76d1fc77ce23c4a9810b28f7 *src/Makevars.in
-c4bf10fb23a597e92a7a29b63ea64d23 *src/Makevars.ucrt
-4c28f670eb66eb951e18f5e42b7fa016 *src/Makevars.win
+76ad45ced472a6c1d5594fcd8550ee1f *src/Makevars.in
+5cfa3b5e3237d70e6fddbce976e23622 *src/Makevars.ucrt
 5c194403898d418d2312e959866128ef *src/RcppExports.cpp
 cea23da9bcf3691ff941c263c79411c3 *src/warp_file.cpp
 0622a97a2aaa3c342f09636052c2d7f5 *tests/spelling.R
