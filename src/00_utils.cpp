@@ -1,10 +1,9 @@
-#include <Rcpp.h>
+#include <cpp11.hpp>
 #include "gdalapplib/gdalapplib.h"
 
+using namespace cpp11;
 
-using namespace Rcpp;
-
-// [[Rcpp::export]]
-CharacterVector raster_gdalinfo_app_cpp(CharacterVector dsn, CharacterVector options) {
+[[cpp11::register]]
+strings raster_gdalinfo_app_cpp(strings dsn, strings options) {
   return gdalapplib::gdalinfo_applib_cpp(dsn, options);
 }

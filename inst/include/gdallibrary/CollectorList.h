@@ -1,26 +1,24 @@
+#ifndef COLLECTORLIST_H
+#define COLLECTORLIST_H
 
-#include <Rcpp.h>
+#include <cpp11.hpp>
 
-using Rcpp::List;
-
+// Growing list, adapted from Jim Hester's fs package CollectorList.
+// cpp11::writable::list grows efficiently (unlike Rcpp::List::push_back),
+// so this is now a thin wrapper.
 class CollectorList {
-  List data_;
-  R_xlen_t n_;
+  cpp11::writable::list data_;
 
 public:
-  CollectorList(R_xlen_t size = 1) : data_(size), n_(0) {}
+  CollectorList() {}
 
   void push_back(SEXP x) {
-    if (Rf_xlength(data_) == n_) {
-      data_ = Rf_lengthgets(data_, static_cast<R_len_t> (n_ * 2));
-    }
-    SET_VECTOR_ELT(data_, n_++, x);
+    data_.push_back(x);
   }
 
-  List vector() {
-    if (Rf_xlength(data_) != n_) {
-      data_ = Rf_xlengthgets(data_, n_);
-    }
+  cpp11::list vector() {
     return data_;
   }
 };
+
+#endif

@@ -3,16 +3,16 @@
 
 // WIP https://gdal.org/development/rfc/rfc86_column_oriented_api.html
 // written by Dewey Dunnington and the GDAL project
-// https://github.com/paleolimbot/sf/tree/stream-reading
 
-#include <Rcpp.h>
+#include <cpp11.hpp>
 #include <ogrsf_frmts.h>
 #include "common/common_vapour.h"
 #if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(3,6,0)
 #include <ogr_recordbatch.h>
 #endif
 
-using namespace Rcpp;
+using namespace cpp11;
+namespace writable = cpp11::writable;
 
 namespace gdalvectorstream {
 
@@ -21,7 +21,7 @@ namespace gdalvectorstream {
 
 class GDALStreamWrapper {
 public:
-  static void Make(struct ArrowArrayStream* stream, Rcpp::List shelter,
+  static void Make(struct ArrowArrayStream* stream, cpp11::list shelter,
                    struct ArrowArrayStream* stream_out) {
     stream_out->get_schema = &get_schema_wrap;
     stream_out->get_next = &get_next_wrap;
@@ -38,11 +38,10 @@ public:
   }
 
 private:
-  // The parent stream as returned from GDAL
   struct ArrowArrayStream stream_;
-  Rcpp::List shelter_;
+  cpp11::list shelter_;
 
-  GDALStreamWrapper(struct ArrowArrayStream* stream, Rcpp::List shelter):
+  GDALStreamWrapper(struct ArrowArrayStream* stream, cpp11::list shelter):
     shelter_(shelter) {
     memcpy(&stream_, stream, sizeof(struct ArrowArrayStream));
     stream->release = nullptr;
@@ -86,16 +85,14 @@ static void finalize_dataset_xptr(SEXP dataset_xptr) {
   }
 }
 
-inline Rcpp::List ogr_layer_setup(Rcpp::CharacterVector datasource,
-                                  Rcpp::CharacterVector layer,
-                               Rcpp::CharacterVector query,
+inline list ogr_layer_setup(strings datasource,
+                                  strings layer,
+                               strings query,
                                std::vector<std::string> options,
                                bool quiet,
                                std::vector<std::string> drivers,
-                               Rcpp::NumericVector ex,
-
+                               doubles ex,
                                int width) {
-  // adapted from the OGR tutorial @ www.gdal.org
   std::vector <char *> open_options;
   if (options.size() > 0) {
      open_options = string_to_charptr(options);
@@ -104,122 +101,115 @@ inline Rcpp::List ogr_layer_setup(Rcpp::CharacterVector datasource,
   std::vector <char *> drivers_v = string_to_charptr(drivers);
   GDALDataset *poDS;
 
-  poDS = (GDALDataset *) GDALOpenEx( datasource[0], GDAL_OF_VECTOR | GDAL_OF_READONLY,
+  poDS = (GDALDataset *) GDALOpenEx( as_cstr(datasource[0]), GDAL_OF_VECTOR | GDAL_OF_READONLY,
           drivers.size() ? drivers_v.data() : NULL,
           open_options.size() ? open_options.data() : NULL,
           NULL );
 
   if( poDS == NULL ) {
-
-    Rcpp::stop("Cannot open %s; ", datasource);
+    cpp11::stop("Cannot open %s; ", as_cstr(datasource[0]));
   }
 
-  // Will close the dataset if some early return/exception prevents GDALClose() from being
-  // called/allows the result to be accessed by the caller.
-  Rcpp::RObject dataset_xptr = R_MakeExternalPtr(poDS, R_NilValue, R_NilValue);
+  SEXP dataset_xptr = PROTECT(R_MakeExternalPtr(poDS, R_NilValue, R_NilValue));
   R_RegisterCFinalizer(dataset_xptr, &finalize_dataset_xptr);
 
+  writable::strings layer_w;
+  bool layer_empty = (layer.size() == 0);
+  bool query_na = (query.size() > 0 && STRING_ELT(query, 0) == NA_STRING);
 
-  if (layer.size() == 0 && Rcpp::CharacterVector::is_na(query[0])) { // no layer specified
+  if (layer_empty && query_na) {
     switch (poDS->GetLayerCount()) {
-    case 0: { // error:
-    Rcpp::stop("No layers in datasource.");
+    case 0: {
+    cpp11::stop("No layers in datasource.");
   }
-    case 1: { // silent:
+    case 1: {
       OGRLayer *poLayer = poDS->GetLayer(0);
-      layer = Rcpp::CharacterVector::create(poLayer->GetName());
+      layer_w.push_back(poLayer->GetName());
       break;
     }
-    default: { // select first layer: message + warning:
+    default: {
       OGRLayer *poLayer = poDS->GetLayer(0);
-      layer = Rcpp::CharacterVector::create(poLayer->GetName());
-      if (! quiet) { // #nocov start
-        Rcpp::Rcout << "Multiple layers are present in data source " << datasource[0] << ", ";
-        Rcpp::Rcout << "reading layer `" << layer[0] << "'." << std::endl;
-        Rcpp::Rcout << "Use `st_layers' to list all layer names and their type in a data source." << std::endl;
-        Rcpp::Rcout << "Set the `layer' argument in `st_read' to read a particular layer." << std::endl;
-      } // #nocov end
-      Rcpp::Function warning("warning");
-      warning("automatically selected the first layer in a data source containing more than one.");
+      layer_w.push_back(poLayer->GetName());
+      if (! quiet) {
+        Rprintf("Multiple layers are present in data source %s, ", as_cstr(datasource[0]));
+        Rprintf("reading layer `%s'.\n", CHAR(STRING_ELT(layer_w, 0)));
+        Rprintf("Use `st_layers' to list all layer names and their type in a data source.\n");
+        Rprintf("Set the `layer' argument in `st_read' to read a particular layer.\n");
+      }
+      auto warning_fn = cpp11::package("base")["warning"];
+      warning_fn("automatically selected the first layer in a data source containing more than one.");
     }
     }
+  } else {
+    for (R_xlen_t i = 0; i < layer.size(); i++) layer_w.push_back(std::string(layer[i]));
   }
-
 
   OGRPolygon poly;
   OGRLinearRing ring;
+  writable::strings query_w(1);
+  query_w[0] = (query.size() > 0) ? SEXP(query[0]) : NA_STRING;
 
-  if (ex.length() == 4) {
+  if (ex.size() == 4) {
         if (ex[1] <= ex[0] || ex[3] <= ex[2]) {
-          if (ex[1] <= ex[0]) {
-            Rcpp::warning("extent filter invalid (xmax <= xmin), ignoring");
-          }
-          if (ex[3] <= ex[2]) {
-            Rcpp::warning("extent filter invalid (ymax <= ymin), ignoring");
-          }
+          if (ex[1] <= ex[0]) cpp11::warning("extent filter invalid (xmax <= xmin), ignoring");
+          if (ex[3] <= ex[2]) cpp11::warning("extent filter invalid (ymax <= ymin), ignoring");
         } else {
-          ring.addPoint(ex[0], ex[2]); //xmin, ymin
-          ring.addPoint(ex[0], ex[3]); //xmin, ymax
-          ring.addPoint(ex[1], ex[3]); //xmax, ymax
-          ring.addPoint(ex[1], ex[2]); //xmax, ymin
+          ring.addPoint(ex[0], ex[2]);
+          ring.addPoint(ex[0], ex[3]);
+          ring.addPoint(ex[1], ex[3]);
+          ring.addPoint(ex[1], ex[2]);
           ring.closeRings();
           poly.addRing(&ring);
-          if (Rcpp::CharacterVector::is_na(query[0]) ) {
-            query[0] =  CPLSPrintf("SELECT * FROM %s", (char *) layer[0]);
+          if (STRING_ELT(query_w, 0) == NA_STRING) {
+            std::string auto_sql = CPLSPrintf("SELECT * FROM %s", CHAR(STRING_ELT(layer_w, 0)));
+            query_w[0] = auto_sql.c_str();
           }
         }
   }
 
   OGRLayer *poLayer;
-  if (! Rcpp::CharacterVector::is_na(query[0])) {// [[Rcpp::export]]
-  // FIXME we need dialect here
-    poLayer = poDS->ExecuteSQL(query[0], &poly, NULL);
+  bool query_is_na = (STRING_ELT(query_w, 0) == NA_STRING);
+  if (!query_is_na) {
+    poLayer = poDS->ExecuteSQL(CHAR(STRING_ELT(query_w, 0)), &poly, NULL);
     if (poLayer == NULL)
-      Rcpp::stop("Query execution failed, cannot open layer.\n"); // #nocov
-    if (layer.size())
-      Rcpp::warning("argument layer is ignored when query is specified\n"); // #nocov
-  } else
-    poLayer = 	poDS->GetLayerByName(layer[0]);
+      cpp11::stop("Query execution failed, cannot open layer.\n");
+    if (layer_w.size())
+      cpp11::warning("argument layer is ignored when query is specified\n");
+  } else {
+    poLayer = poDS->GetLayerByName(CHAR(STRING_ELT(layer_w, 0)));
+  }
   if (poLayer == NULL) {
-    Rcpp::Rcout << "Cannot open layer " << layer[0] << std::endl;
-    Rcpp::stop("Opening layer failed.\n");
+    Rprintf("Cannot open layer %s\n", CHAR(STRING_ELT(layer_w, 0)));
+    cpp11::stop("Opening layer failed.\n");
   }
 
   if (! quiet) {
-    if (! Rcpp::CharacterVector::is_na(query[0]))
-      Rcpp::Rcout << "Reading query `" << query[0] << "'" << std::endl << "from data source ";
+    if (!query_is_na)
+      Rprintf("Reading query `%s'\nfrom data source ", CHAR(STRING_ELT(query_w, 0)));
     else
-      Rcpp::Rcout << "Reading layer `" << layer[0] << "' from data source ";
-    // if (LENGTH(datasource[0]) > (width - (34 + LENGTH(layer[0]))))
-    Rcpp::String ds(datasource(0));
-    if (layer.size()) {
-      Rcpp::String la(layer(0));
-      if (strlen(ds.get_cstring()) > (width - (34 + strlen(la.get_cstring()))))
-        Rcpp::Rcout << std::endl << "  ";
-    }
-    Rcpp::Rcout << "`" << datasource[0] << "' ";
-    if (((int) strlen(ds.get_cstring())) > (width - 25))
-      Rcpp::Rcout << std::endl << "  ";
-    Rcpp::Rcout << "using driver `" << poDS->GetDriverName() << "'" << std::endl;                       // #nocov
+      Rprintf("Reading layer `%s' from data source ", CHAR(STRING_ELT(layer_w, 0)));
+    Rprintf("`%s' ", as_cstr(datasource[0]));
+    Rprintf("using driver `%s'\n", poDS->GetDriverName());
   }
 
-  // Keeps the dataset external pointer alive as long as the layer external pointer is alive
-  Rcpp::RObject layer_xptr = R_MakeExternalPtr(poLayer, R_NilValue, dataset_xptr);
+  SEXP layer_xptr = PROTECT(R_MakeExternalPtr(poLayer, R_NilValue, dataset_xptr));
   Rprintf("%s", "ogr_layer_setup:\n");
-  return Rcpp::List::create(dataset_xptr, layer_xptr);
+  writable::list result = {dataset_xptr, layer_xptr};
+  UNPROTECT(2);
+  return result;
 }
 
-inline Rcpp::List read_gdal_stream(
-    Rcpp::RObject stream_xptr,
-    Rcpp::CharacterVector datasource,
-    Rcpp::CharacterVector layer,
-    Rcpp::CharacterVector query,
+inline list read_gdal_stream(
+    cpp11::sexp stream_xptr,
+    strings datasource,
+    strings layer,
+    strings query,
     std::vector<std::string> options,
     bool quiet,
     std::vector<std::string> drivers,
-    Rcpp::NumericVector extent,
+    doubles extent,
     bool dsn_exists,
-    Rcpp::CharacterVector fid_column,
+    strings fid_column,
     int width) {
 
   const char* array_stream_options[] = {"INCLUDE_FID=NO", nullptr};
@@ -227,40 +217,31 @@ inline Rcpp::List read_gdal_stream(
     array_stream_options[0] = "INCLUDE_FID=YES";
   }
 
-  Rcpp::List prep = ogr_layer_setup(datasource, layer, query,
-                                        options,
-                                        quiet,
-                                        drivers,
-                                        extent,
-                                        width);
-  
+  list prep = ogr_layer_setup(datasource, layer, query,
+                                        options, quiet, drivers, extent, width);
+
   OGRLayer* poLayer = (OGRLayer*)R_ExternalPtrAddr(prep[1]);
   auto stream_out = reinterpret_cast<struct ArrowArrayStream*>(
     R_ExternalPtrAddr(stream_xptr));
 
-  //OGRSpatialReference* crs = poLayer->GetSpatialRef();
   OGRLayerH hLayer = reinterpret_cast<OGRLayerH>(poLayer);
-  
   OGRSpatialReferenceH hSRS = OGR_L_GetSpatialRef(hLayer);
 
   char* wkt_out;
-  
   std::string wkt_str;
   if (OSRExportToWkt(hSRS, &wkt_out) != OGRERR_NONE) {
-    Rcpp::stop("error export SRS to Wkt"); 
+    cpp11::stop("error export SRS to Wkt");
   }
   wkt_str = wkt_out;
   CPLFree(wkt_out);
-  
+
   struct ArrowArrayStream stream_temp;
   if (!poLayer->GetArrowStream(&stream_temp, array_stream_options)) {
-    Rcpp::stop("Failed to open ArrayStream from Layer");
+    cpp11::stop("Failed to open ArrayStream from Layer");
   }
 
   GDALStreamWrapper::Make(&stream_temp, prep, stream_out);
 
-
-  // The reported feature count is incorrect if there is a query
   double num_features;
   if (query.size() == 0) {
     num_features = (double) poLayer->GetFeatureCount(false);
@@ -268,26 +249,28 @@ inline Rcpp::List read_gdal_stream(
     num_features = -1;
   }
 
-
-
-  return Rcpp::List::create(wkt_str, Rcpp::NumericVector::create(num_features));
+  writable::strings wkt_cv(1);
+  wkt_cv[0] = wkt_str.c_str();
+  writable::doubles nf = {num_features};
+  writable::list result = {wkt_cv, nf};
+  return result;
 }
 
 #else
 
-inline Rcpp::List read_gdal_stream(
-    Rcpp::RObject stream_xptr,
-    Rcpp::CharacterVector datasource,
-    Rcpp::CharacterVector layer,
-    Rcpp::CharacterVector query,
+inline list read_gdal_stream(
+    cpp11::sexp stream_xptr,
+    strings datasource,
+    strings layer,
+    strings query,
     std::vector<std::string> options,
     bool quiet,
     std::vector<std::string> drivers,
-    Rcpp::NumericVector extent,
+    doubles extent,
     bool dsn_exists,
-    Rcpp::CharacterVector fid_column,
+    strings fid_column,
     int width) {
-  Rcpp::stop("read_stream() requires GDAL >= 3.6");
+  cpp11::stop("read_stream() requires GDAL >= 3.6");
 }
 
 #endif

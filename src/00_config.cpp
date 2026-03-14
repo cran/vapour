@@ -1,16 +1,18 @@
-#include <Rcpp.h>
+#include <cpp11.hpp>
 #include "gdallibrary/gdallibrary.h"
-using namespace Rcpp;
-using namespace gdallibrary;
 
-// [[Rcpp::export]]
-IntegerVector set_gdal_config_cpp(CharacterVector option, CharacterVector value) 
+using namespace cpp11;
+
+[[cpp11::register]]
+integers set_gdal_config_cpp(strings option, strings value)
 {
-  gdal_set_config_option( option, value );
-  return 1;
+  gdallibrary::gdal_set_config_option(option, value);
+  writable::integers out(1);
+  out[0] = 1;
+  return out;
 }
 
-// [[Rcpp::export]]
-CharacterVector get_gdal_config_cpp(CharacterVector option){
-  return gdal_get_config_option(option);
+[[cpp11::register]]
+strings get_gdal_config_cpp(strings option){
+  return gdallibrary::gdal_get_config_option(option);
 }
