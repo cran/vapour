@@ -56,7 +56,11 @@ sds_boilerplate_checks <- function(x, sds = NULL) {
 #' \item{datatype}{the band type name, in GDAL form 'Byte', 'Int16', 'Float32', etc.}
 #' \item{subdatasets}{any subdataset DSNs is present, otherwise `NULL` }
 #' \item{corners}{corner coordinates of the data, for non-zero skew geotransforms a 2-column matrix with rows upperLeft, lowerLeft, lowerRight, upperRight, and center}
+#' \item{image_structure}{named character vector of the dataset's 'IMAGE_STRUCTURE' metadata, for example 'COMPRESSION', 'INTERLEAVE' or 'LAYOUT', or `NULL` if there is none}
 #' }
+#'
+#' A source with no geotransform reports GDAL's default, `c(0, 1, 0, 0, 0, 1)`, which
+#' is pixel and line coordinates with y increasing down. Its extent is then `c(0, ncol, 0, nrow)`.
 #'
 #' Note that the geotransform is a kind of obscure combination of the extent and dimension, I don't find it
 #' useful and modern GDAL is moving away from needing it so much. Extent is more sensible and used in many places in
@@ -117,13 +121,13 @@ sds_boilerplate_checks <- function(x, sds = NULL) {
 #' Usually the skew components are zero, and so only four coefficients are
 #' relevant and correspond to the offset and scale used to position the raster -
 #' in combination with the number of rows and columns of data they provide the
-#' spatial extent and the pixel size in each direction.  Very rarely a an actual
-#' affine raster will be use with this _rotation_ specified within the transform
+#' spatial extent and the pixel size in each direction.  Very rarely an actual
+#' affine raster will be used with this _rotation_ specified within the transform
 #' coefficients.
 #'
 #' Calculation of 'minmax' can take a significant amount of time, so it's not done by default. Use
-#' 'minmax = TRUE' to do it. (It does perform well, but may be prohibitive for very large or remote sources.)
-#' @seealso vapour_sds_info
+#' `min_max = TRUE` to do it. (It does perform well, but may be prohibitive for very large or remote sources.)
+#' @seealso vapour_sds_names
 #'
 #' @section Overviews:
 #'
@@ -136,7 +140,7 @@ sds_boilerplate_checks <- function(x, sds = NULL) {
 #' @param min_max logical, control computing min and max values in source ('FALSE' by default)
 #' @param ... currently unused
 #'
-#' @return list with vectors 'geotransform', 'dimXY', 'minmax', 'tilesXY', 'projection', 'bands', 'proj4', 'nodata_value',
+#' @return list with vectors 'geotransform', 'dimXY', 'minmax', 'block', 'projection', 'bands', 'projstring', 'nodata_value',
 #'  'overviews', 'filelist' see sections in Details for more on each element
 #' @export
 #' @examples
@@ -164,8 +168,9 @@ vapour_raster_info <- function(x, ..., sds = NULL, min_max = FALSE) {
 
 
   if (is.null(json$geoTransform) && !is.null(extent)) {
-    geoTransform <- c(extent[1], diff(extent[c(1,2)])/json$size[1], 0, 
-                      extent[4], 0, diff(extent[c(4:3)])/json$size[2])
+    ## the source has no geotransform, so GDAL reports corners in pixel and
+    ## line coordinates: that is the default transform, with y increasing down
+    geoTransform <- c(0, 1, 0, 0, 0, 1)
   } else {
     geoTransform <- json$geoTransform
   }
@@ -185,7 +190,8 @@ vapour_raster_info <- function(x, ..., sds = NULL, min_max = FALSE) {
        datatype = json$bands$type[1L], 
        extent = extent, 
        subdatasets = sds, 
-       corners = corners)
+       corners = corners, 
+       image_structure = unlist(json$metadata$IMAGE_STRUCTURE))
 }
 
 
@@ -244,7 +250,7 @@ vapour_raster_gcp <- function(x, ...) {
 #' variable, so we always treat a source as a subdataset, even if there's only
 #' one.
 #'
-#' Returns a character vector of 'subdatasets`. In the case of a normal data
+#' Returns a character vector of `subdatasets`. In the case of a normal data
 #' source, with no subdatasets the value is simply  the `datasource`.
 #'
 #' If the raw SDS names contain spaces these are replaced by '%20' escape strings. A specific example is  
@@ -280,6 +286,61 @@ vapour_sds_names <- function(x) {
     sources <- x[1L]  ## should return 0-vector, or NULL I think
   }
  sources
+}
+
+#' Subdatasets of raster sources
+#'
+#' A data frame of the subdatasets of one or more raster sources, one row for each
+#' subdataset. This is the vectorised form of [vapour_sds_names()], and it also
+#' gives GDAL's description of each subdataset.
+#'
+#' A source with no subdatasets gives one row, in which `subdataset` is the source
+#' itself and `description` is `NA`. So every source has at least one row, and
+#' every value of `subdataset` is a data source that can be opened.
+#'
+#' @param x one or more data source strings, filename, database connection string, or other URL
+#'
+#' @return data frame with columns
+#' \describe{
+#' \item{dsn}{the source, as given in `x`}
+#' \item{sds}{the number of the subdataset within its source, counted from 1 (as used by the `sds` argument of other functions)}
+#' \item{subdataset}{the data source string of the subdataset}
+#' \item{description}{GDAL's description of the subdataset, usually its dimensions, name and type}
+#' }
+#' @seealso [vapour_sds_names()] [vapour_raster_info()]
+#' @export
+#'
+#' @examples
+#' tif <- system.file("extdata", "sst.tif", package = "vapour")
+#' vapour_sds(tif)
+#'
+#' f <- system.file("extdata/gdal", "sds.nc", package = "vapour")
+#' ## protect from error with netcdf problems
+#' result <- try(vapour_sds(c(f, tif)), silent = TRUE)
+#' if (!inherits(result, "try-error")) {
+#'   print(result)
+#' }
+vapour_sds <- function(x) {
+  x <- .check_dsn_multiple(x)
+  if (anyNA(x)) stop("missing values in 'x'")
+  one <- function(dsn) {
+    info <- gdalinfo_internal(dsn, json = TRUE)
+    if (is.na(info)) stop(sprintf("GDAL was unable to open '%s'", dsn))
+    md <- jsonlite::fromJSON(info)$metadata$SUBDATASETS
+    if (is.null(md)) {
+      return(data.frame(dsn = dsn, sds = 1L, subdataset = dsn, description = NA_character_, 
+                        stringsAsFactors = FALSE))
+    }
+    name <- md[grep("_NAME$", names(md))]
+    idx <- sub("^SUBDATASET_([0-9]+)_NAME$", "\\1", names(name))
+    desc <- md[paste0("SUBDATASET_", idx, "_DESC")]
+    desc <- vapply(desc, function(d) if (is.null(d)) NA_character_ else as.character(d)[1L], "")
+    data.frame(dsn = dsn, sds = as.integer(idx), subdataset = unlist(name, use.names = FALSE), 
+               description = unname(desc), stringsAsFactors = FALSE)
+  }
+  out <- do.call(rbind, lapply(x, one))
+  rownames(out) <- NULL
+  out
 }
 
 #' Retrieve geolocation information for a dataset

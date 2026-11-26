@@ -12,7 +12,7 @@
 #' <https://gdal.org/>.
 #'
 #' Lightweight means we access parts of the GDAL API as near as possible to
-#' their native usage. GDAL is not a lightweight library, but provide a very
+#' their native usage. GDAL is not a lightweight library, but provides a very
 #' nice abstraction over format details for a very large number of different
 #' formats.
 #'
@@ -44,7 +44,8 @@
 #' data source \cr \code{\link{vapour_layer_info}} \tab list of data source,
 #' driver, layer name/s, fields, feature count, projection \cr
 #' \code{\link{vapour_read_extent}}        \tab read the extent, or bounding
-#' box, of geometries in a layer \cr \code{\link{vapour_read_fields}}    \tab
+#' box, of geometries in a layer \cr \code{\link{vapour_feature_extent}} \tab
+#' the same extents as a matrix, one row for each feature \cr \code{\link{vapour_read_fields}}    \tab
 #' read attributes of features in a layer, the columnar data associated with
 #' each geometry \cr \code{\link{vapour_read_geometry}}      \tab read geometry
 #' in binary (blob, WKB) form \cr \code{\link{vapour_read_geometry_ia}} \tab
@@ -73,7 +74,7 @@
 #'   The SQL dialect can be set to "" (empty string), "OGRSQL", or "SQLITE".
 #'
 #'   The empty string indicates that the native dialect will be used, see
-#'   [OGRSQL and SQLITE for GDAL(https://gdal.org/en/stable/user/ogr_sql_sqlite_dialect.html) and the
+#'   [OGRSQL and SQLITE for GDAL](https://gdal.org/en/stable/user/ogr_sql_sqlite_dialect.html) and the
 #'   [GDAL_DMD_SUPPORTED_SQL_DIALECTS development documentation](https://gdal.org/en/stable/api/raster_c_api.html).
 #'   
 #'  Setting "NATIVE" as an alias for "" is quite recent and has not been tested with vapour, similarly no testing has been done

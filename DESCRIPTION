@@ -1,6 +1,6 @@
 Package: vapour
 Title: Access to the 'Geospatial Data Abstraction Library' ('GDAL')
-Version: 0.16.0
+Version: 0.20.0
 Authors@R: c(person("Michael", "Sumner", email = "mdsumner@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-2471-7511")), 
              person("Simon", "Wotherspoon", role = "ctb", comment = "RasterIO configuration for resampling options"), 
              person("Mark", "Padgham", role = "ctb", comment = "helped get started :)"), 
@@ -10,7 +10,6 @@ Authors@R: c(person("Michael", "Sumner", email = "mdsumner@gmail.com", role = c(
              person("Timothy", "Keitt", role = c("ctb"), comment = "wrote GetPointsInternal copied here from rgdal2 package"), 
              person("Jeroen", "Ooms", role = c("ctb"), comment = "tweaked build process, provided Windows build tools"), 
              person("Dale", "Maschette", role = c("ctb"), comment = "created the hex logo"), 
-             person("Joseph", "Stachelek", role = "ctb"), 
              person("Even", "Rouault", role = "ctb", comment = "primary author of the COG format and its use of the GDALwarp app-library, example code used by the warper function here"), 
              person("Robert", "Hijmans", role = "ctb", comment = "code in terra package used as example/inspiration"), 
              person("Dewey", "Dunnington", role = "ctb", comment = "wrote the columnar-access mode streaming Arrow support"), 
@@ -26,7 +25,6 @@ Encoding: UTF-8
 LazyData: true
 LinkingTo: cpp11
 Imports: jsonlite, nanoarrow, stringr, utils, wk
-RoxygenNote: 7.3.3
 Suggests: testthat, knitr, markdown, rmarkdown, spelling
 SystemRequirements: libgdal-dev, GDAL (>= 2.2.3), PROJ (>= 4.8.0)
 VignetteBuilder: knitr
@@ -35,7 +33,8 @@ URL: https://github.com/hypertidy/vapour,
 BugReports: https://github.com/hypertidy/vapour/issues
 Language: en-US
 NeedsCompilation: yes
-Packaged: 2026-03-14 00:50:02 UTC; mdsumner
+Config/roxygen2/version: 8.1.1
+Packaged: 2026-11-26 05:49:18 UTC; mdsumner
 Author: Michael Sumner [aut, cre] (ORCID:
     <https://orcid.org/0000-0002-2471-7511>),
   Simon Wotherspoon [ctb] (RasterIO configuration for resampling options),
@@ -49,7 +48,6 @@ Author: Michael Sumner [aut, cre] (ORCID:
     package),
   Jeroen Ooms [ctb] (tweaked build process, provided Windows build tools),
   Dale Maschette [ctb] (created the hex logo),
-  Joseph Stachelek [ctb],
   Even Rouault [ctb] (primary author of the COG format and its use of the
     GDALwarp app-library, example code used by the warper function
     here),
@@ -60,4 +58,4 @@ Author: Michael Sumner [aut, cre] (ORCID:
   Tomas Kalibera [ctb]
 Maintainer: Michael Sumner <mdsumner@gmail.com>
 Repository: CRAN
-Date/Publication: 2026-03-14 06:10:02 UTC
+Date/Publication: 2026-11-26 10:00:02 UTC

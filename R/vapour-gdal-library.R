@@ -47,8 +47,8 @@ vapour_get_config  <- function(option) {
 #'
 #' Convert a projstring to Well Known Text.
 #'
-#' The function is vectorized because why not, but probably only ever will be
-#' used on single element vectors of character strings.
+#' The function is vectorized, though in practice it is almost always used on a
+#' single character string.
 #'
 #' Note that no sanitizing is done on inputs, we literally just 'OGRSpatialReference.SetFromUserInput(crs)' and
 #' give the output as WKT. If it's an error in GDAL it's an error in R.
@@ -166,6 +166,7 @@ vapour_geom_summary <- function(dsource, layer = 0L, sql = "", limit_n = NULL, s
 #' * `create` driver can create (note vapour provides no write capacity)
 #' * `copy`   driver can copy (note vapour provides no write capacity)
 #' * `virtual` driver has virtual capabilities ('vsi')
+#' * `sql_dialects` the SQL dialects a vector driver supports, space separated with the default first (`NA` for other drivers, and before GDAL 3.6)
 #'
 #' `vapour_driver()` returns the short name of the driver, e.g. 'GPKG' or 'GTiff', to get the
 #' long name and other properties use `vapour_all_drivers()` and match on 'driver'.

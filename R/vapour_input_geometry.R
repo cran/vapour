@@ -14,13 +14,14 @@
 #'  \item{fields}{a named vector of field types (see [vapour_report_fields])}
 #'  \item{count}{the number of features in this data source (can be turned off to avoid the extra work `count`)}
 #'  \item{extent}{the extent of all features xmin, xmax, ymin, ymax (can be turned off to avoid the extra work `extent`)}
-#'  \item{projection}{a list of character strings, see next}
+#'  \item{projection}{a list of formats of the projection metadata, see next}
+#'  \item{filelist}{the files that make up the data source (may be none)}
 #'  }
 #'
-#' `$projection` is a list of various formats of the projection metadata.
+#' `$projection` is a list with elements `Wkt`, `Proj4` and `EPSG`.
 #' Use `$projection$Wkt` as most authoritative, but we don't enter into the discussion or limit what
-#' might be done with this (that's up to you). Currently we see
-#' `c("Proj4", "MICoordSys", "PrettyWkt", "Wkt", "EPSG", "XML")` as names of this `$projection` element.
+#' might be done with this (that's up to you). `EPSG` is the integer EPSG code when the
+#' projection carries one or GDAL can identify one for it, otherwise `NA`.
 #'
 #' To get the geometry type/s of a layer see [vapour_read_type()].
 #'
@@ -68,7 +69,8 @@ vapour_layer_info <- function(dsource, layer = 0L, sql = "", extent = NA, count 
        fields = fields,
        count = cnt,
        extent = ext,
-       projection = projection_info_gdal_cpp(dsource, layer = as.integer(layer), sql = sql)[c("Wkt", "Proj4", "EPSG")])
+       projection = projection_info_gdal_cpp(dsource, layer = as.integer(layer), sql = sql)[c("Wkt", "Proj4", "EPSG")],
+       filelist = vector_filelist_gdal_cpp(dsource))
 }
 
 #' Read layer extent
@@ -109,12 +111,14 @@ vapour_layer_extent <- function(dsource, layer = 0L, sql = "", extent = 0, ...) 
 #' `vapour_read_geometry` will read features as binary WKB, `vapour_read_geometry_text` as various text formats (geo-json, wkt, kml, gml),
 #' 
 #' `vapour_read_extent` a numeric extent which is the native bounding box, the four numbers (in this order) `xmin, xmax, ymin, ymax`.
+#' `vapour_feature_extent` gives the same extents as a matrix, one row for each feature, with those four as named columns. A 
+#' missing geometry is a row of `NA`.
 #' For each function an optional SQL string will be evaluated against the data source before reading.
 #'
 #' `vapour_read_geometry_ia` will read features by *arbitrary index*, so any integer between 0 and one less than the number of
 #' features. These may be duplicated. If 'ia' is greater than the highest index NULL is returned, but if less than 0 the function will error.
 #'
-#' `vapour_read_geometry_ij` will read features by *index range*, so two numbers to read ever feature between those limits inclusively.
+#' `vapour_read_geometry_ij` will read features by *index range*, so two numbers to read every feature between those limits inclusively.
 #' 'i' and 'j' must be increasing.
 #'
 #' `vapour_read_type` will read the (wkb) type of the geometry as an integer. These are
@@ -135,9 +139,10 @@ vapour_layer_extent <- function(dsource, layer = 0L, sql = "", extent = 0, ...) 
 #' @param skip_n an arbitrary number of features to skip
 #' @param extent apply an arbitrary extent, only when 'sql' used (must be 'ex = c(xmin, xmax, ymin, ymax)' but sp bbox, sf bbox, and raster extent also accepted)
 #' @param ia an arbitrary index, integer vector with values between 0 and one less the number of features, duplicates allowed and arbitrary order is ok
-#' @param ij an range index, integer vector of length two with values between 0 and one less the number of features, this range of geometries is returned
+#' @param ij a range index, integer vector of length two with values between 0 and one less the number of features, this range of geometries is returned
 #' @return for [vapour_read_geometry()], [vapour_read_geometry_ia()] and [vapour_read_geometry_ij()] a raw vector of
 #'  geometry, for [vapour_read_extent()] a list of numeric vectors each with 'xmin,xmax,ymin,ymax' respectively for each geometry, 
+#'  for [vapour_feature_extent()] a numeric matrix with columns 'xmin', 'xmax', 'ymin', 'ymax' and one row for each geometry, 
 #'  for [vapour_read_type()] a character vector. See Details for more information. 
 #' @examples
 #' file <- "list_locality_postcode_meander_valley.tab"
@@ -157,6 +162,10 @@ vapour_layer_extent <- function(dsource, layer = 0L, sql = "", extent = 0, ...) 
 #'
 #' ## polygon extents in a list xmin, xmax, ymin, ymax
 #' exgeom <- vapour_read_extent(mvfile)
+#'
+#' ## the same extents as a matrix, one row for each polygon
+#' exmat <- vapour_feature_extent(mvfile)
+#' head(exmat)
 #'
 #' ## points in raw text (GeoJSON)
 #' txtpointjson <- vapour_read_geometry_text(pfile)
@@ -205,6 +214,14 @@ vapour_read_extent <- function(dsource, layer = 0L, sql = "", limit_n = NULL, sk
   if (any(nulls)) out[nulls] <- replicate(sum(nulls), rep(NA_real_, 4L), simplify = FALSE)
   out
 
+}
+
+#' @rdname vapour_read_geometry
+#' @export
+vapour_feature_extent <- function(dsource, layer = 0L, sql = "", limit_n = NULL, skip_n = 0, extent = NA) {
+  ex <- vapour_read_extent(dsource, layer = layer, sql = sql, limit_n = limit_n, skip_n = skip_n, extent = extent)
+  matrix(as.double(unlist(ex, use.names = FALSE)), ncol = 4L, byrow = TRUE,
+         dimnames = list(NULL, c("xmin", "xmax", "ymin", "ymax")))
 }
 
 #' @rdname vapour_read_geometry

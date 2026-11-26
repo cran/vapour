@@ -16,7 +16,7 @@ vapour_raster_info(x, ..., sds = NULL, min_max = FALSE)
 \item{min_max}{logical, control computing min and max values in source ('FALSE' by default)}
 }
 \value{
-list with vectors 'geotransform', 'dimXY', 'minmax', 'tilesXY', 'projection', 'bands', 'proj4', 'nodata_value',
+list with vectors 'geotransform', 'dimXY', 'minmax', 'block', 'projection', 'bands', 'projstring', 'nodata_value',
 'overviews', 'filelist' see sections in Details for more on each element
 }
 \description{
@@ -42,7 +42,11 @@ The structural metadata are
 \item{datatype}{the band type name, in GDAL form 'Byte', 'Int16', 'Float32', etc.}
 \item{subdatasets}{any subdataset DSNs is present, otherwise \code{NULL} }
 \item{corners}{corner coordinates of the data, for non-zero skew geotransforms a 2-column matrix with rows upperLeft, lowerLeft, lowerRight, upperRight, and center}
+\item{image_structure}{named character vector of the dataset's 'IMAGE_STRUCTURE' metadata, for example 'COMPRESSION', 'INTERLEAVE' or 'LAYOUT', or \code{NULL} if there is none}
 }
+
+A source with no geotransform reports GDAL's default, \code{c(0, 1, 0, 0, 0, 1)}, which
+is pixel and line coordinates with y increasing down. Its extent is then \code{c(0, ncol, 0, nrow)}.
 
 Note that the geotransform is a kind of obscure combination of the extent and dimension, I don't find it
 useful and modern GDAL is moving away from needing it so much. Extent is more sensible and used in many places in
@@ -105,12 +109,12 @@ centre convention rather than edge.
 Usually the skew components are zero, and so only four coefficients are
 relevant and correspond to the offset and scale used to position the raster -
 in combination with the number of rows and columns of data they provide the
-spatial extent and the pixel size in each direction.  Very rarely a an actual
-affine raster will be use with this \emph{rotation} specified within the transform
+spatial extent and the pixel size in each direction.  Very rarely an actual
+affine raster will be used with this \emph{rotation} specified within the transform
 coefficients.
 
 Calculation of 'minmax' can take a significant amount of time, so it's not done by default. Use
-'minmax = TRUE' to do it. (It does perform well, but may be prohibitive for very large or remote sources.)
+\code{min_max = TRUE} to do it. (It does perform well, but may be prohibitive for very large or remote sources.)
 }
 
 \section{Overviews}{
@@ -126,5 +130,5 @@ f <- system.file("extdata", "sst.tif", package = "vapour")
 vapour_raster_info(f)
 }
 \seealso{
-vapour_sds_info
+vapour_sds_names
 }

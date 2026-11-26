@@ -1,3 +1,125 @@
+# vapour 0.20.0
+
+* New `vapour_feature_extent()` returns the extent of each feature as a
+  matrix with columns `xmin`, `xmax`, `ymin`, `ymax`, one row for each
+  feature and a row of `NA` for a missing geometry. `vapour_read_extent()`
+  is unchanged and still returns a list of four-number vectors (#142).
+
+* Integer reads no longer turn every value at or below the nodata value into
+  `NA`, only the nodata value itself. This affected `vapour_read_raster()` and
+  `vapour_warp_raster()` on integer sources: with a nodata value of 0, all
+  negative values were lost (#219).
+
+* `gdal_raster_data()` and `vapour_warp_raster()` gain `unscale = TRUE`, as
+  `vapour_read_raster()` and `vapour_read_raster_block()` already have. Set it
+  to `FALSE` to get the stored values rather than values converted by the
+  band's scale and offset (#226).
+
+* An integer `band_output_type` now gives the stored values in that type. It
+  was ignored for a band with a scale, which came back as scaled doubles, so
+  `vapour_read_raster_int()` and `vapour_warp_raster_int()` did not return
+  integers for such a source (#226).
+
+* A band offset is now applied when the band has no scale. It was ignored.
+
+* Band arguments follow one rule (#150): `NULL` means all bands, otherwise
+  band numbers counted from 1, which may be repeated and in any order. A
+  value less than 1, a missing value or a fraction is an error.
+    - `vapour_read_raster()` accepts `band = NULL`, and reads several bands
+      with one call to GDAL rather than opening the source for each.
+    - `vapour_warp_raster()` with the default `bands = NULL` returns all
+      bands, as documented. It returned only the first.
+    - `gdal_raster_data()` with a `bands` value less than 1 still returns all
+      bands, with a warning to use `bands = NULL`.
+
+* New `vapour_sds()` returns a data frame of the subdatasets of one or more
+  sources, with GDAL's description of each. It is the vectorised form of
+  `vapour_sds_names()` (#133).
+
+* `vapour_layer_info()` now reports the EPSG code in `projection$EPSG` when
+  the projection carries one or GDAL can identify one for it, and `NA`
+  otherwise. It was always 0 (#234).
+
+* `vapour_layer_info()` gains `filelist`, the files that make up the data
+  source (#120).
+
+* `vapour_all_drivers()` gains `sql_dialects`, the SQL dialects each vector
+  driver supports (#175).
+
+* `vapour_raster_info()` gains `image_structure`, the dataset's
+  IMAGE_STRUCTURE metadata such as compression and interleaving (#113).
+
+* `vapour_raster_info()` on a source with no geotransform now reports GDAL's
+  default `c(0, 1, 0, 0, 0, 1)`. It reported a transform with the y axis
+  flipped, which the source does not have (#225).
+
+* An invalid `extent` filter now warns once rather than once for each time
+  the layer is opened internally (#178).
+
+* `vapour_layer_info()` no longer warns "unable export SRS to XML", or lets
+  GDAL print MapInfo projection errors, for a projection those formats cannot
+  express. Neither format is part of what it returns.
+
+* Arguments that GDAL cannot parse are now an R error rather than a crash.
+  An unknown `resample` or a malformed `options` value in `gdal_raster_data()`,
+  `gdal_raster_dsn()`, `gdal_raster_image()`, `gdal_raster_nara()` or
+  `vapour_warp_raster()` took down the R session, because the warp options
+  were used without checking that GDAL had created them (#231).
+
+* `buildvrt()` on a source that cannot be opened, and `vapour_vrt()` with
+  `geolocation` on a source that cannot be opened, no longer crash. The first
+  is now an error and the second returns `NA` like the other `vapour_vrt()`
+  failures.
+
+* `vapour_read_raster()` reads more than one band again. A `band` vector
+  longer than one was an error under R 4.3.0 and later (#203).
+
+* Fixed the PROTECT imbalance reported by rchk in the nativeRaster
+  conversion (#239).
+
+* The Int8, Int64 and UInt64 band types are now gated on the GDAL version
+  number rather than on separate major and minor tests, which would have
+  dropped them under GDAL 4.0.
+
+* configure now passes `LDFLAGS` when linking its GDAL and PROJ test
+  programs, so builds against a library prefix off the default runtime
+  search path (such as conda-forge, which supplies the rpath in `LDFLAGS`)
+  no longer fail with "PROJ not available?". Reported by Matthew Feickert
+  while packaging vapour for conda-forge.
+
+* Removed a global `using namespace std;` from the gdalwarpgeneral header,
+  which made `list` ambiguous between `cpp11::list` and `std::list` under
+  the MSVC STL (Matthew Feickert).
+
+* The bundled copy of PROJ data (inst/proj, present on Windows and macOS CRAN
+  binaries and on Linux only with `--configure-args='--with-data-copy=yes'`)
+  is now validated at load. PROJ checks proj.db's database layout version
+  lazily, so a copy taken from one PROJ version silently breaks when the
+  linked libproj is a different version. vapour now points GDAL at the
+  bundled copy, forces a database lookup, and if that fails reverts to the
+  PROJ defaults with a startup message naming the PROJ that built the
+  bundled proj.db and its layout version. Prompted by CRAN's note on the
+  ICESat2VegR failure with PROJ 9.9.0.
+
+* The PROJ search path is now set with `OSRSetPROJSearchPaths()` rather than
+  the `PROJ_LIB` environment variable, so it is scoped to GDAL's PROJ
+  contexts and no longer leaks into other packages' libproj.
+
+* The bundled copy of GDAL data (inst/gdal, present under the same conditions
+  as the PROJ copy) is now activated with the `GDAL_DATA` configuration
+  option rather than the environment variable, for the same reason. It is set
+  before the drivers are registered, because GDAL builds its data file search
+  path once during registration and ignores `GDAL_DATA` after that. On
+  Windows the bundled copy is the only one GDAL can find, and drivers that
+  need a data file (OSM and its osmconf.ini) fail without it.
+
+* The gate for restoring `PROJ_LIB` on unload was stale: `proj/alaska` was
+  removed in PROJ 7, so the variable was never restored. The PROJ gate is now
+  `proj/proj.db`.
+
+* New `vapour_proj_data()` reports the PROJ search paths in use, whether the
+  bundled copy is active, and the metadata of the proj.db that resolves.
+
 # vapour 0.16.0
 
 * Converted entire C++ backend from Rcpp to cpp11. vapour is now header-only

@@ -8,7 +8,6 @@
 #include "gdal_utils.h"
 #include "gdalraster/gdalraster.h"
 #include "ogr_spatialref.h"
-using namespace std;
 
 namespace gdalwarpgeneral{
 
@@ -62,7 +61,8 @@ inline list gdal_warp_general(strings dsn,
                               strings options,
                               strings dsn_outname,
                               logicals include_meta,
-                              logicals nara) {
+                              logicals nara,
+                              logicals unscale) {
 
   std::vector<GDALDatasetH> src_ds(dsn.size());
 
@@ -137,6 +137,15 @@ inline list gdal_warp_general(strings dsn,
 
   GDALWarpAppOptions* psOptions = GDALWarpAppOptionsNew(papszArg, nullptr);
   CSLDestroy(papszArg);
+  // GDAL returns NULL when it cannot parse the arguments (unknown resampling
+  // method, unknown switch, missing value)
+  if (psOptions == nullptr) {
+    std::string msg = CPLGetLastErrorMsg();
+    for (int si = 0; si < dsn.size(); si++) {
+      GDALClose( src_ds[si] );
+    }
+    cpp11::stop("invalid warp options: %s", msg.c_str());
+  }
   GDALWarpAppOptionsSetProgress(psOptions, NULL, NULL );
 
     GDALDatasetH hRet = GDALWarp(outname.c_str(), nullptr,
@@ -174,8 +183,6 @@ inline list gdal_warp_general(strings dsn,
         cpp11::stop("band number is not available: %i", (int)bands[i]);
       }
     }
-    writable::logicals unscale(1);
-    unscale[0] = TRUE;
     writable::integers window(6);
     for (int i  = 0; i < window.size(); i++) window[i] = 0;
 

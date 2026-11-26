@@ -5,10 +5,11 @@
 
 <!-- badges: start -->
 
-[![R_build_status](https://github.com/hypertidy/vapour/workflows/R-CMD-check/badge.svg)](https://github.com/hypertidy/vapour/actions)
-[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/vapour)](https://cran.r-project.org/package=vapour)
+[![R_build_status](https://github.com/hypertidy/vapour/actions/workflows/check-standard.yaml/badge.svg)](https://github.com/hypertidy/vapour/actions/workflows/check-standard.yaml)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/vapour)](https://CRAN.R-project.org/package=vapour)
+[![conda-forge
+version](https://img.shields.io/conda/vn/conda-forge/r-vapour.svg)](https://anaconda.org/conda-forge/r-vapour)
 <!-- badges: end -->
 
 ## Overview
@@ -60,6 +61,8 @@ constrained to any particular data model.
 
 ## Installation
 
+### From CRAN
+
 Install from CRAN, this should work on MacOS and Windows because CRAN
 provide binaries.
 
@@ -67,7 +70,31 @@ provide binaries.
 install.packages("vapour")
 ```
 
-The development version can be installed from Github.
+### From conda-forge
+
+[![conda-forge
+platforms](https://img.shields.io/conda/pn/conda-forge/r-vapour.svg)](https://anaconda.org/conda-forge/r-vapour)
+
+Vapour is available on
+[conda-forge](https://github.com/conda-forge/r-vapour-feedstock) as
+`r-vapour` and can be installed with [Pixi](https://pixi.prefix.dev/):
+
+``` bash
+pixi add r-vapour
+```
+
+or with [`conda`](https://docs.conda.io/):
+
+``` bash
+conda install --channel conda-forge r-vapour
+```
+
+The conda-forge package installs all its dependencies from conda-forge,
+so no system libraries are required.
+
+### Development version
+
+The development version can be installed from GitHub.
 
 ``` r
 options(repos = c(
@@ -76,7 +103,7 @@ options(repos = c(
 install.packages("vapour")
 ```
 
-To install the development version the more github-traditional way:
+To install the development version the more GitHub-traditional way:
 
 ``` r
 remotes::install_github("hypertidy/vapour")
@@ -168,7 +195,7 @@ vals <- vapour::vapour_warp_raster(elevation.tiles.prod, extent = ex, dimension 
 image(m <- matrix(vals[[1]], nrow = dm[2], ncol = dm[1])[,dm[2]:1 ])
 ```
 
-<img src="man/figures/README-topo-example-1.png" width="100%" />
+<img src="man/figures/README-topo-example-1.png" alt="" width="100%" />
 
 ``` r
 ## using the image list format
@@ -177,12 +204,11 @@ image(x)
 
 ## or as a spatial object
 library(terra)
-#> terra 1.8.76
 r <- rast(ext(ex), nrows = dm[2], ncols = dm[1], crs = crs, vals = vals[[1]])
 contour(r, add = TRUE)
 ```
 
-<img src="man/figures/README-topo-example-2.png" width="100%" />
+<img src="man/figures/README-topo-example-2.png" alt="" width="100%" />
 
 If we want more detail, go ahead:
 
@@ -190,19 +216,19 @@ If we want more detail, go ahead:
 dm <- c(512, 512)
 vals <- vapour::vapour_warp_raster(elevation.tiles.prod, extent = ex, dimension = dm, projection = crs)
 (r <- rast(ext(ex), nrows = dm[2], ncols = dm[1], crs = crs, vals = vals[[1]]))
-#> class       : SpatRaster 
+#> class       : SpatRaster
 #> size        : 512, 512, 1  (nrow, ncol, nlyr)
 #> resolution  : 19.53125, 19.53125  (x, y)
 #> extent      : -5000, 5000, -5000, 5000  (xmin, xmax, ymin, ymax)
-#> coord. ref. : +proj=laea +lat_0=40.416667 +lon_0=-3.716667 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs 
+#> coord. ref. : +proj=laea +lat_0=40.416667 +lon_0=-3.716667 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs
 #> source(s)   : memory
-#> name        : lyr.1 
-#> min value   :   562 
+#> name        : lyr.1
+#> min value   :   562
 #> max value   :   742
 plot(r, col = hcl.colors(24))
 ```
 
-<img src="man/figures/README-lod-1.png" width="100%" />
+<img src="man/figures/README-lod-1.png" alt="" width="100%" />
 
 GDAL is obstinately *format agnostic*, the A stands for *Abstraction*
 and we like that in R too, just gives us the data. Here we created a
@@ -236,10 +262,6 @@ Examples of packages that use vapour are in development, especially
 Limitations, work-in-progress and other discussion:
 
 <https://github.com/hypertidy/vapour/issues/4>
-
-We’ve kept a record of a minimal GDAL wrapper package here:
-
-<https://github.com/diminutive/gdalmin>
 
 # Code of conduct
 

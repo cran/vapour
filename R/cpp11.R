@@ -4,8 +4,8 @@ gdal_dsn_read_vector_stream <- function(stream_xptr, dsn, layer, sql, options, q
   .Call(`_vapour_gdal_dsn_read_vector_stream`, stream_xptr, dsn, layer, sql, options, quiet, drivers, extent, dsn_exists, fid_column_name, width)
 }
 
-warp_general_cpp <- function(dsn, target_crs, target_extent, target_dim, target_res, bands, resample, silent, band_output_type, options, dsn_outname, include_meta, nara) {
-  .Call(`_vapour_warp_general_cpp`, dsn, target_crs, target_extent, target_dim, target_res, bands, resample, silent, band_output_type, options, dsn_outname, include_meta, nara)
+warp_general_cpp <- function(dsn, target_crs, target_extent, target_dim, target_res, bands, resample, silent, band_output_type, options, dsn_outname, include_meta, nara, unscale) {
+  .Call(`_vapour_warp_general_cpp`, dsn, target_crs, target_extent, target_dim, target_res, bands, resample, silent, band_output_type, options, dsn_outname, include_meta, nara, unscale)
 }
 
 warp_suggest_cpp <- function(dsn, target_crs) {
@@ -30,6 +30,10 @@ driver_gdal_cpp <- function(dsn) {
 
 driver_id_gdal_cpp <- function(dsn) {
   .Call(`_vapour_driver_id_gdal_cpp`, dsn)
+}
+
+vector_filelist_gdal_cpp <- function(dsn) {
+  .Call(`_vapour_vector_filelist_gdal_cpp`, dsn)
 }
 
 layer_names_gdal_cpp <- function(dsn) {
@@ -138,6 +142,26 @@ read_geometry_gdal_cpp <- function(dsn, layer, sql, what, textformat, limit_n, s
 
 read_fids_gdal_cpp <- function(dsn, layer, sql, limit_n, skip_n, ex) {
   .Call(`_vapour_read_fids_gdal_cpp`, dsn, layer, sql, limit_n, skip_n, ex)
+}
+
+set_proj_search_paths_cpp <- function(paths) {
+  .Call(`_vapour_set_proj_search_paths_cpp`, paths)
+}
+
+get_proj_search_paths_cpp <- function() {
+  .Call(`_vapour_get_proj_search_paths_cpp`)
+}
+
+probe_proj_db_cpp <- function() {
+  .Call(`_vapour_probe_proj_db_cpp`)
+}
+
+proj_db_metadata_cpp <- function(path) {
+  .Call(`_vapour_proj_db_metadata_cpp`, path)
+}
+
+unset_gdal_config_cpp <- function(option) {
+  .Call(`_vapour_unset_gdal_config_cpp`, option)
 }
 
 raster_gcp_gdal_cpp <- function(dsn) {

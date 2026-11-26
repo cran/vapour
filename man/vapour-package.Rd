@@ -18,7 +18,7 @@ abstract data model to the calling application for all supported formats
 \url{https://gdal.org/}.
 
 Lightweight means we access parts of the GDAL API as near as possible to
-their native usage. GDAL is not a lightweight library, but provide a very
+their native usage. GDAL is not a lightweight library, but provides a very
 nice abstraction over format details for a very large number of different
 formats.
 
@@ -50,7 +50,8 @@ report attribute name of geometry \cr \code{\link{vapour_geom_summary}}
 data source \cr \code{\link{vapour_layer_info}} \tab list of data source,
 driver, layer name/s, fields, feature count, projection \cr
 \code{\link{vapour_read_extent}}        \tab read the extent, or bounding
-box, of geometries in a layer \cr \code{\link{vapour_read_fields}}    \tab
+box, of geometries in a layer \cr \code{\link{vapour_feature_extent}} \tab
+the same extents as a matrix, one row for each feature \cr \code{\link{vapour_read_fields}}    \tab
 read attributes of features in a layer, the columnar data associated with
 each geometry \cr \code{\link{vapour_read_geometry}}      \tab read geometry
 in binary (blob, WKB) form \cr \code{\link{vapour_read_geometry_ia}} \tab
@@ -82,7 +83,7 @@ dialect in use \cr }
 The SQL dialect can be set to "" (empty string), "OGRSQL", or "SQLITE".
 
 The empty string indicates that the native dialect will be used, see
-[OGRSQL and SQLITE for GDAL(https://gdal.org/en/stable/user/ogr_sql_sqlite_dialect.html) and the
+\href{https://gdal.org/en/stable/user/ogr_sql_sqlite_dialect.html}{OGRSQL and SQLITE for GDAL} and the
 \href{https://gdal.org/en/stable/api/raster_c_api.html}{GDAL_DMD_SUPPORTED_SQL_DIALECTS development documentation}.
 
 Setting "NATIVE" as an alias for "" is quite recent and has not been tested with vapour, similarly no testing has been done
@@ -101,6 +102,11 @@ Useful links:
 \author{
 \strong{Maintainer}: Michael Sumner \email{mdsumner@gmail.com} (\href{https://orcid.org/0000-0002-2471-7511}{ORCID})
 
+Authors:
+\itemize{
+  \item Michael Sumner \email{mdsumner@gmail.com} (\href{https://orcid.org/0000-0002-2471-7511}{ORCID})
+}
+
 Other contributors:
 \itemize{
   \item Simon Wotherspoon (RasterIO configuration for resampling options) [contributor]
@@ -111,7 +117,6 @@ Other contributors:
   \item Timothy Keitt (wrote GetPointsInternal copied here from rgdal2 package) [contributor]
   \item Jeroen Ooms (tweaked build process, provided Windows build tools) [contributor]
   \item Dale Maschette (created the hex logo) [contributor]
-  \item Joseph Stachelek [contributor]
   \item Even Rouault (primary author of the COG format and its use of the GDALwarp app-library, example code used by the warper function here) [contributor]
   \item Robert Hijmans (code in terra package used as example/inspiration) [contributor]
   \item Dewey Dunnington (wrote the columnar-access mode streaming Arrow support) [contributor]
